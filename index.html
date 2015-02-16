@@ -1,0 +1,356 @@
+<!DOCTYPE html> 
+<html>
+    <head>
+        <title>E-Gas Cylinders</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="css/jquery.mobile.icons.min.css" />
+        <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css" />
+        <link rel="stylesheet" type="text/css" href="css/jquery.raty.css" />
+        <link rel="stylesheet" type="text/css" href="css/theme.min.css" />
+        <link rel="stylesheet" type="text/css" href="css/jquery.mobile.structure-1.4.5.min.css" />
+        <link rel="stylesheet" type="text/css" href="css/style.css" />
+
+        <script type="text/javascript" charset="utf-8" src="js/libs/jquery-2.0.3.js"></script>
+        <script type="text/javascript" charset="utf-8" src="js/config.js"></script>
+        <script type="text/javascript" src="js/libs/jquery.loadTemplate-1.4.4.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="js/libs/jquery.mobile.router.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="js/libs/jquery.mobile-1.4.3.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="js/libs/jquery-dateFormat.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="js/libs/jquery.raty.js"></script>
+        <script type="text/javascript" charset="utf-8" src="js/push.js"></script>
+        <script type="text/javascript" charset="utf-8" src="js/index.js"></script>
+        <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+        <script id="panel-init">
+            $(function () {
+                $("body>[data-role='panel']").panel();
+                $("[data-role=panel]").panel().enhanceWithin();
+                $("#externalpopup").enhanceWithin().popup();
+            });
+
+            $(document).on("pageinit", function () {
+                $("[data-role=panel] a").on("click", function () {
+                    if ($(this).attr("href") == "#" + $.mobile.activePage[0].id) {
+                        $("[data-role=panel]").panel("close");
+                    }
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <div data-role="page" id="register_one" data-title="E-Gas Cylinders">
+            <div data-role="header" data-position="fixed">
+                <h1 class="ui-title" role="heading">Registration</h1>
+                <div class="ui-btn-right">
+                    <a class="ui-btn ui-shadow ui-corner-all" href="#faq" data-iconpos="notext"><i class="fa fa-info-circle"></i></a>
+                </div>
+            </div>
+            <div role="main" class="ui-content">
+                <input type="text" name="mobile" id="mobile" value="" onblur="" placeholder="Your Mobile Number" />
+                <a class="ui-btn ui-corner-all ui-btn-a" href="#" onclick="registerPartOne();">Proceed</a>
+                <div id="reg_one_spinner"></div>
+            </div>
+            <div data-role="popup" id="reg_err_one" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
+                <div data-role="header" data-theme="a">
+                    <h1>Alert</h1>
+                </div>
+                <div role="main" class="ui-content">
+                    <p id="reg_err_one_text"></p>
+                    <div class="request_btns">
+                        <a href="#" class="ui-btn-1">Ok</a>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- register part one-->
+
+        <div data-role="page" id="register" data-title="E-Gas Cylinders">
+            <div data-role="header" data-position="fixed">
+                <h1 class="ui-title" role="heading">Registration</h1>
+                <div class="ui-btn-right">
+                    <a class="ui-btn ui-shadow ui-corner-all" href="#faq" data-iconpos="notext"><i class="fa fa-info-circle"></i></a>
+                </div>
+            </div>
+            <div role="main" class="ui-content">
+                <input type="text" name="name" value="" id="name" placeholder="Your Name" />
+                <input type="text" name="email" id="email" value="" placeholder="Your Email id" />
+                <select id="gas_type" data-role="none">
+                    <option value="0">Residential</option>
+                    <option value="1">Commercial</option>
+                </select>
+                <input type="text" name="addressl1" id="addressl1" value="" placeholder="Address Line 1" />
+                <input type="text" name="addressl2" id="addressl2" value="" placeholder="Address Line 2" />
+                <input type="text" name="fix_city" id="fix_city" readonly="true" value="Chennai" placeholder="City" />
+                <input type="text" name="area_pin" id="area_pin" value="" placeholder="Pin code" />
+                <input type="text" name="alt_number" id="alt_number" value="" placeholder="Alternative Number" />
+                <a class="ui-btn ui-corner-all ui-btn-a" href="#" onclick="createCode();">Submit</a>
+            </div>
+            <div id="err_msg" class="ui-content"></div>
+            <div data-role="popup" id="reg_err" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
+                <div data-role="header" data-theme="a">
+                    <h1>Alert</h1>
+                </div>
+                <div role="main" class="ui-content">
+                    <p id="reg_err_text"></p>
+                    <div class="request_btns">
+                        <a href="#" class="ui-btn-1">Ok</a>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- register -->
+
+        <div data-role="page" id="verify" data-title="E-Gas Cylinders">
+            <div data-role="header" data-position="fixed">
+                <h1 class="ui-title" role="heading">Registration</h1>
+                <div class="ui-btn-right">
+                    <a class="ui-btn ui-shadow ui-corner-all" href="#faq" data-iconpos="notext"><i class="fa fa-info-circle"></i></a>
+                </div>
+            </div>
+            <div role="main" class="ui-content">
+                <input type="password" name="code" value="" id="code" placeholder="Your Verification Code" />
+                <a class="ui-btn ui-corner-all ui-btn-a" href="#" onclick="verifyCode();">Verify</a>
+                <div id="timer" class="ui-content"></div><div id="resend"></div>
+            </div>
+            <div data-role="popup" id="verify_err" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
+                <div data-role="header" data-theme="a">
+                    <h1>Alert</h1>
+                </div>
+                <div role="main" class="ui-content">
+                    <p id="verify_err_text"></p>
+                    <div class="request_btns">
+                        <a href="#" class="ui-btn-1" data-rel="back">Ok</a>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- verify -->
+
+        <div data-role="page" id="supplier" data-title="E-Gas Cylinders">
+            <div data-role="header" data-position="fixed">
+                <h1 class="ui-title" role="heading">Supply Details</h1>
+                <div class="ui-btn-right">
+                    <a class="ui-btn ui-shadow ui-corner-all" href="#faq" data-iconpos="notext"><i class="fa fa-info-circle"></i></a>
+                </div>
+            </div>
+            <div role="main" class="ui-content">
+                <table>
+                    <tbody>
+                        <tr><td>Customer Name</td><td><select data-role="none" id="customer_list"></select></td></tr>
+                        <tr><td>Price</td><td><input type="text" value="" id="cyl_price" name="cyl_price" max="100" min="1" /></td></tr>
+                        <tr><td>Full Cylinder</td><td><input type="number" value="1" id="full_cyl" name="full_cyl" max="100" min="1" /></td></tr>
+                        <tr><td>Empty Cylinder</td><td><input type="number" value="0" id="empty_cyl" name="empty_cyl" max="100" min="0" /></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div data-role="popup" id="supplier_popup" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
+                <div data-role="header" data-theme="a">
+                    <h1>Alert</h1>
+                </div>
+                <div role="main" class="ui-content">
+                    <p id="supplier_popup_text"></p>
+                    <div class="request_btns">
+                        <a href="#" class="ui-btn-1" data-rel="back">Ok</a>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- supplier -->
+
+        <div data-role="page" id="me" data-title="E-Gas Cylinders">
+            <div data-role="header" data-position="fixed">
+                <h1 class="ui-title" role="heading">User Profile</h1>
+                <a class="ui-btn-left ui-btn ui-shadow ui-corner-all" href="#mypannel"><i class="fa fa-list"></i></a>
+                <div class="ui-btn-right">
+                    <a class="ui-btn ui-shadow ui-corner-all" href="#faq" data-iconpos="notext"><i class="fa fa-info-circle"></i></a>
+                    <a class="ui-btn ui-shadow ui-corner-all" href="#cart" data-iconpos="notext"><i class="fa fa-briefcase"></i> <span id="me_cart"> 0</span></a>
+                </div>
+            </div>
+            <div role="main" class="ui-content">
+                <input type="text" value="" placeholder="Your name" id="me_name"/>
+                <input type="text" readonly="true" value="" placeholder="Your mobile" id="me_mobile"/>
+                <input type="text" value="" placeholder="Your email" id="me_email"/>
+                <a href="#" onclick="updateUser();" class="ui-btn ui-btn-corner-all ui-btn-a">Update Details</a>
+            </div>
+            <div id="me_loader"></div>
+            <div data-role="popup" id="update_success" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
+                <div data-role="header" data-theme="a">
+                    <h1>Alert</h1>
+                </div>
+                <div role="main" class="ui-content">
+                    <p id="update_success_text"></p>
+                    <div class="request_btns">
+                        <a href="#" class="ui-btn-1" data-rel="back">Ok</a>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- me -->
+
+        <div data-role="page" id="more" data-title="E-Gas Cylinders">
+            <div data-role="header" data-position="fixed">
+                <h1 class="ui-title" role="heading">More Options</h1>
+                <div class="ui-btn-right">
+                    <a class="ui-btn ui-shadow ui-corner-all" href="#faq" data-iconpos="notext"><i class="fa fa-info-circle"></i></a>
+                    <a class="ui-btn ui-shadow ui-corner-all" href="#cart"><i class="fa fa-briefcase"></i> <span id="more_cart"> 0</span></a>
+                </div>
+                <a class="ui-btn-left ui-btn ui-shadow ui-corner-all" href="#mypannel"><i class="fa fa-list"></i></a>
+            </div>
+            <div role="main" class="ui-content">
+                <ul data-role="listview" data-inset="true" data-theme='b'>
+                    <li><a href="#contact" class="ui-btn">Contact</a></li>
+                    <li><a href="#share" class="ui-btn">Share this app</a></li>
+                    <li><a href="#feedback" class="ui-btn">Feedback Form</a></li>
+                    <li><a href="#refer" class="ui-btn">Refer Friend</a></li>
+                    <li><a href="#about" class="ui-btn">About</a></li>
+                </ul>
+            </div>
+        </div> <!-- more -->
+
+        <div data-role="page" id="policy" data-title="E-Gas Cylinders">
+            <div data-role="header" data-position="fixed">
+                <h1 class="ui-title" role="heading">Policy</h1>
+                <div class="ui-btn-right">
+                    <a class="ui-btn ui-shadow ui-corner-all" href="#faq" data-iconpos="notext"><i class="fa fa-info-circle"></i></a>
+                </div>
+                <a data-rel="back" data-icon="carat-l" data-iconpos="notext">Menu</a>
+            </div>
+            <div role="main" class="ui-content">
+                <div id="policy_details"></div>
+            </div>
+        </div> <!-- policy -->
+
+        <div data-role="page" id="contact" data-title="E-Gas Cylinders">
+            <div data-role="header" data-position="fixed">
+                <h1 class="ui-title" role="heading">Contact</h1>
+                <div class="ui-btn-right">
+                    <a class="ui-btn ui-shadow ui-corner-all" href="#faq" data-iconpos="notext"><i class="fa fa-info-circle"></i></a>
+                </div>
+                <a data-rel="back" data-icon="carat-l" data-iconpos="notext">Menu</a>
+            </div>
+            <div role="main" class="ui-content">
+                <div>
+                    <img src="img/map.png" alt="e-gas map" class="mapimg" />
+                    <div id="contact_details"></div>
+                </div>
+            </div>
+        </div> <!-- contact -->
+
+        <div data-role="page" id="faq" data-title="E-Gas Cylinders">
+            <div data-role="header" data-position="fixed">
+                <h1 class="ui-title" role="heading">Frequently Asked Questions</h1>
+                <div class="ui-btn-right">
+                    <a class="ui-btn ui-shadow ui-corner-all" href="#faq" data-iconpos="notext"><i class="fa fa-info-circle"></i></a>
+                </div>
+                <a data-rel="back" data-icon="carat-l" data-iconpos="notext">Menu</a>
+            </div>
+            <div role="main" class="ui-content">
+                <div id="faq_details"></div>
+            </div>
+        </div> <!-- faq -->
+
+        <div data-role="page" id="share" data-title="E-Gas Cylinders">
+            <div data-role="header" data-position="fixed">
+                <h1 class="ui-title" role="heading">Share this app</h1>
+                <div class="ui-btn-right">
+                    <a class="ui-btn ui-shadow ui-corner-all" href="#faq" data-iconpos="notext"><i class="fa fa-info-circle"></i></a>
+                </div>
+                <a data-rel="back" data-icon="carat-l" data-iconpos="notext">Menu</a>
+            </div>
+            <div role="main" class="ui-content">
+                <ul data-role="listview" data-inset="true" data-theme="b">
+                    <li><a href="#" class="ui-btn" onclick="gplusShare()"><i class="fa fa-google-plus-square"></i> Share with google+</a></li>
+                    <li><a href="#" class="ui-btn" onclick="fbShare()"><i class="fa fa-facebook-square"></i> Share with facebook</a></li>
+                    <li><a href="#" class="ui-btn" onclick="twitterShare()"><i class="fa fa-twitter-square"></i> Share with twitter</a></li>
+                    <li><a href="#" class="ui-btn" onclick="rateUs()"><i class="fa fa-star"></i> Rate and Review</a></li>
+                </ul>
+            </div>
+        </div> <!-- share -->
+
+        <div data-role="page" id="feedback" data-title="E-Gas Cylinders">
+            <div data-role="header" data-position="fixed">
+                <h1 class="ui-title" role="heading">Feedback Form</h1>
+                <div class="ui-btn-right">
+                    <a class="ui-btn ui-shadow ui-corner-all" href="#faq" data-iconpos="notext"><i class="fa fa-info-circle"></i></a>
+                </div>
+                <a data-rel="back" data-icon="carat-l" data-iconpos="notext">Menu</a>
+            </div>
+            <div role="main" class="ui-content">
+                <div id="contact_submit">
+                    <div><input value="" type="text" id="contact_name" name="name" placeholder="Your Name" autofocus></div>
+                    <div><input type="text" value="" id="contact_email" name="email" placeholder="Your Email"></div>
+                    <div><input type="text" name="phone" id="contact_num" placeholder="Your Mobile No"><span id="num_msg"></span></div>
+                </div>
+                <div><textarea id="contact_message" rows="3" name="message" placeholder="Your Feedback"></textarea></div>
+                <div><a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-a" onclick="return receiveForm();">Submit</a></div>
+            </div>
+            <div data-role="popup" id="feedback_err" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
+                <div data-role="header" data-theme="a">
+                    <h1>Alert</h1>
+                </div>
+                <div role="main" class="ui-content">
+                    <p id="feedback_err_text"></p>
+                    <div class="request_btns">
+                        <a href="#" class="ui-btn-1" data-rel="back">Ok</a>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- feedback -->
+
+        <div data-role="page" id="refer" data-title="E-Gas Cylinders">
+            <div data-role="header" data-position="fixed">
+                <h1 class="ui-title" role="heading">Refer Friend</h1>
+                <div class="ui-btn-right">
+                    <a class="ui-btn ui-shadow ui-corner-all" href="#faq" data-iconpos="notext"><i class="fa fa-info-circle"></i></a>
+                </div>
+                <a data-rel="back" data-icon="carat-l" data-iconpos="notext">Menu</a>
+            </div>
+            <div role="main" class="ui-content">
+                <input type="email" placeholder="Your friend's email id" value="" name="friend_email" id="friend_email"/>
+                <textarea name="friend_message" rows="3" id="friend_message" placeholder="Your message for friend"></textarea>
+                <a href="#" class="ui-btn ui-btn-corner-all" onclick="referFriend();">Refer</a>
+            </div>
+            <div data-role="popup" id="refer_err" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
+                <div data-role="header" data-theme="a">
+                    <h1>Alert</h1>
+                </div>
+                <div role="main" class="ui-content">
+                    <p id="refer_err_text"></p>
+                    <div class="request_btns">
+                        <a href="#" class="ui-btn-1" data-rel="back">Ok</a>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- refer -->
+
+        <div data-role="page" id="about" data-title="E-Gas Cylinders">
+            <div data-role="header" data-position="fixed">
+                <h1 class="ui-title" role="heading">About App</h1>
+                <div class="ui-btn-right">
+                    <a class="ui-btn ui-shadow ui-corner-all" href="#faq" data-iconpos="notext"><i class="fa fa-info-circle"></i></a>
+                </div>
+                <a data-rel="back" data-icon="carat-l" data-iconpos="notext">Back</a>
+            </div>
+            <div role="main" class="ui-content">
+                <div id="about_app_details"></div>
+            </div>
+        </div> <!-- about -->
+
+        <div data-role="popup" id="externalpopup" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
+            <div data-role="header" data-theme="a">
+                <h1>Information</h1>
+            </div>
+            <div role="main" class="ui-content">
+                <p id="externalpopup_text"></p>
+                <div class="request_btns">
+                    <a href="#" class="ui-btn-1" data-rel="back">Ok</a>
+                </div>
+            </div>
+        </div> <!-- External popup -->
+
+        <div data-role="panel" id="mypannel" data-dismissible=”true” data-position="left" data-theme="b" data-position-fixed="true" data-display="overlay">
+            <br/><br/> 
+            <ul class="ui-content" data-role="listview">
+                <li><a href="#shopping" class="ui-btn"><i class="fa fa-briefcase"></i> Shop</a></li>
+                <li><a href="#orders" class="ui-btn"><i class="fa fa-paper-plane"></i> Orders</a></li>
+                <li><a href="#me" class="ui-btn"><i class="fa fa-user"></i> Me</a></li>
+                <li><a href="#more" class="ui-btn"><i class="fa fa-bars"></i> More</a></li>
+            </ul>
+            <div class="jayam">Powered by  <a onclick="openJayam();" href="#">Jayam Ltd</a></div>
+        </div>
+    </body>
+</html>
