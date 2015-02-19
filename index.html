@@ -37,6 +37,43 @@
         </script>
     </head>
     <body>
+        <div data-role="page" id="loading" data-title="E-Gas Cylinders">
+            <div role="main" class="ui-content">
+                <div id="make_center">
+                    <div id="load_gif"></div>
+                    <p class="align-center" id="load_data"></p>
+                </div>
+            </div>
+            <script>
+                $("#loading").on("pageshow", function () {
+                    $("div#make_center").center();
+                });
+            </script>
+        </div> <!-- loading page-->
+
+        <div data-role="page" id="intro" data-title="E-Gas Cylinders">
+            <div role="main" class="ui-content">
+                <h3 class="align-center">Instant cooking gas connection</h3>
+                <div class="align-center">
+                    <iframe id="promo-video" class="homevideo" frameborder=0 allowfullscreen></iframe>
+                </div>
+                <div class="ui-grid-solo">
+                    <div class="align-center ui-block-a"><a class="ui-btn ui-btn-corner-all" data-rel="popup" data-transition="pop" href="#intropopup">Get started</a></div>
+                </div>
+            </div>
+            <div data-role="popup" id="intropopup" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
+                <div data-role="header" data-theme="a">
+                    <h1>Information</h1>
+                </div>
+                <div role="main" class="ui-content">
+                    <p>Thanks for using our Beta version. Currently, we support only Super gas connections and deliveries in selected parts of Chennai</p>
+                    <div class="request_btns">
+                        <a href="#" class="ui-btn-1" onclick="getStart();">Ok</a>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- introduction page-->
+
         <div data-role="page" id="register_one" data-title="E-Gas Cylinders">
             <div data-role="header" data-position="fixed">
                 <h1 class="ui-title" role="heading">Registration</h1>
@@ -61,41 +98,6 @@
                 </div>
             </div>
         </div> <!-- register part one-->
-
-        <div data-role="page" id="register" data-title="E-Gas Cylinders">
-            <div data-role="header" data-position="fixed">
-                <h1 class="ui-title" role="heading">Registration</h1>
-                <div class="ui-btn-right">
-                    <a class="ui-btn ui-shadow ui-corner-all" href="#faq" data-iconpos="notext"><i class="fa fa-info-circle"></i></a>
-                </div>
-            </div>
-            <div role="main" class="ui-content">
-                <input type="text" name="name" value="" id="name" placeholder="Your Name" />
-                <input type="text" name="email" id="email" value="" placeholder="Your Email id" />
-                <select id="gas_type" data-role="none">
-                    <option value="0">Residential</option>
-                    <option value="1">Commercial</option>
-                </select>
-                <input type="text" name="addressl1" id="addressl1" value="" placeholder="Address Line 1" />
-                <input type="text" name="addressl2" id="addressl2" value="" placeholder="Address Line 2" />
-                <input type="text" name="fix_city" id="fix_city" readonly="true" value="Chennai" placeholder="City" />
-                <input type="text" name="area_pin" id="area_pin" value="" placeholder="Pin code" />
-                <input type="text" name="alt_number" id="alt_number" value="" placeholder="Alternative Number" />
-                <a class="ui-btn ui-corner-all ui-btn-a" href="#" onclick="createCode();">Submit</a>
-            </div>
-            <div id="err_msg" class="ui-content"></div>
-            <div data-role="popup" id="reg_err" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
-                <div data-role="header" data-theme="a">
-                    <h1>Alert</h1>
-                </div>
-                <div role="main" class="ui-content">
-                    <p id="reg_err_text"></p>
-                    <div class="request_btns">
-                        <a href="#" class="ui-btn-1">Ok</a>
-                    </div>
-                </div>
-            </div>
-        </div> <!-- register -->
 
         <div data-role="page" id="verify" data-title="E-Gas Cylinders">
             <div data-role="header" data-position="fixed">
@@ -125,6 +127,7 @@
         <div data-role="page" id="supplier" data-title="E-Gas Cylinders">
             <div data-role="header" data-position="fixed">
                 <h1 class="ui-title" role="heading">Supply Details</h1>
+                <a class="ui-btn-left ui-btn ui-shadow ui-corner-all" href="#mypannel"><i class="fa fa-list"></i></a>
                 <div class="ui-btn-right">
                     <a class="ui-btn ui-shadow ui-corner-all" href="#faq" data-iconpos="notext"><i class="fa fa-info-circle"></i></a>
                 </div>
@@ -132,12 +135,15 @@
             <div role="main" class="ui-content">
                 <table>
                     <tbody>
-                        <tr><td>Customer Name</td><td><select data-role="none" id="customer_list"></select></td></tr>
-                        <tr><td>Price</td><td><input type="text" value="" id="cyl_price" name="cyl_price" max="100" min="1" /></td></tr>
-                        <tr><td>Full Cylinder</td><td><input type="number" value="1" id="full_cyl" name="full_cyl" max="100" min="1" /></td></tr>
-                        <tr><td>Empty Cylinder</td><td><input type="number" value="0" id="empty_cyl" name="empty_cyl" max="100" min="0" /></td></tr>
+                        <tr><td>Customer Name</td><td><select data-role="none" name="customer_list_supplier" onchange="setPrice()" id="customer_list_supplier"></select></td></tr>
+                        <tr><td>Price</td><td><input type="text" value="" id="cyl_price" name="cyl_price" readonly="true" /></td></tr>
+                        <tr><td>Full Cylinder</td><td><input onblur="calcTotal()" type="text" value="" id="full_cyl" name="full_cyl" /></td></tr>
+                        <tr><td>Empty Cylinder</td><td><input type="text" value="" id="empty_cyl" name="empty_cyl" /></td></tr>
+                        <tr><td>Total<br/><small>*Local taxes extra</small></td><td><input readonly="" type="text" value="" id="cost" name="cost" /></td></tr>
+                        <tr><td><a class="ui-btn" onclick="sendSupplyDetails()">Confirm delivery</a></td><td><a class="ui-btn">Cancel</a></td></tr>
                     </tbody>
                 </table>
+                <div id="supplier_spinner"></div>
             </div>
             <div data-role="popup" id="supplier_popup" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
                 <div data-role="header" data-theme="a">
@@ -151,6 +157,39 @@
                 </div>
             </div>
         </div> <!-- supplier -->
+
+        <div data-role="page" id="collection" data-title="E-Gas Cylinders">
+            <div data-role="header" data-position="fixed">
+                <h1 class="ui-title" role="heading">Collection Details</h1>
+                <a class="ui-btn-left ui-btn ui-shadow ui-corner-all" href="#mypannel"><i class="fa fa-list"></i></a>
+                <div class="ui-btn-right">
+                    <a class="ui-btn ui-shadow ui-corner-all" href="#faq" data-iconpos="notext"><i class="fa fa-info-circle"></i></a>
+                </div>
+            </div>
+            <div role="main" class="ui-content">
+                <table>
+                    <tbody>
+                        <tr><td>Customer Name</td><td><select data-role="none" id="customer_list_collection"></select></td></tr>
+                        <tr><td>Empty Cylinders</td><td><input type="text" value="" id="" name="" /></td></tr>
+                        <tr><td>Previous Balance</td><td><input type="text" value="" id="" name="" readonly="true"/></td></tr>
+                        <tr><td>Current Balance</td><td><input type="text" value="" id="" name="" readonly="true" /></td></tr>
+                        <tr><td>Payment Received</td><td><input type="text" value="" id="" name="" /></td></tr>
+                        <tr><td>Total Balance</td><td><input type="text" value="" id="" name="" readonly="true" /></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div data-role="popup" id="collection_popup" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
+                <div data-role="header" data-theme="a">
+                    <h1>Alert</h1>
+                </div>
+                <div role="main" class="ui-content">
+                    <p id="collection_popup_text"></p>
+                    <div class="request_btns">
+                        <a href="#" class="ui-btn-1" data-rel="back">Ok</a>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- collection -->
 
         <div data-role="page" id="me" data-title="E-Gas Cylinders">
             <div data-role="header" data-position="fixed">
@@ -346,7 +385,7 @@
             <br/><br/> 
             <ul class="ui-content" data-role="listview">
                 <li><a href="#shopping" class="ui-btn"><i class="fa fa-briefcase"></i> Shop</a></li>
-                <li><a href="#orders" class="ui-btn"><i class="fa fa-paper-plane"></i> Orders</a></li>
+                <li><a href="#expenses" class="ui-btn"><i class="fa fa-paper-plane"></i> Orders</a></li>
                 <li><a href="#me" class="ui-btn"><i class="fa fa-user"></i> Me</a></li>
                 <li><a href="#more" class="ui-btn"><i class="fa fa-bars"></i> More</a></li>
             </ul>

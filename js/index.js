@@ -18,9 +18,13 @@ function onDeviceReady() {
 }
 
 var router = new $.mobile.Router([{
+        "#loading": {handler: "loadingPage", events: "bs"},
+        "#intro": {handler: "introPage", events: "bs"},
         "#register_one": {handler: "registerStepOnePage", events: "bs"},
         "#register": {handler: "registerPage", events: "bs"},
         "#verify": {handler: "verifyPage", events: "bs"},
+        "#supplier": {handler: "supplierPage", events: "bs"},
+        "#collection": {handler: "collectionPage", events: "bs"},
         "#me": {handler: "mePage", events: "bs"},
         "#more": {handler: "morePage", events: "bs"},
         "#contact": {handler: "contactPage", events: "bs"},
@@ -31,6 +35,17 @@ var router = new $.mobile.Router([{
         "#feedback": {handler: "feedbackPage", events: "bs"}
     }],
         {
+            loadingPage: function (type, match, ui) {
+                log("Loading Page", 3);
+                loadLocalData();
+            },
+            introPage: function (type, match, ui) {
+                log("Intro Page", 3);
+                getPromoVideo();
+                if (is_mobile) {
+                    window.analytics.trackView('Intro Page');
+                }
+            },
             registerPage: function (type, match, ui) {
                 log("Register Page", 3);
                 refreshRegister();
@@ -48,6 +63,14 @@ var router = new $.mobile.Router([{
                 if (is_mobile) {
                     window.analytics.trackView('Verification Page');
                 }
+            },
+            supplierPage: function (type, match, ui) {
+                log("Supplier Page", 3);
+                loadCustomerSupplyDetails();
+            },
+            collectionPage: function (type, match, ui) {
+                log("Collection Page", 3);
+                loadCustomerCollectionDetails();
             },
             mePage: function (type, match, ui) {
                 log("Me Page", 3);
@@ -108,17 +131,55 @@ function log(msg, level) {
 /********  Common Functions and Global Variables **/
 
 var loading = '<div class="align-center"><br/><br/><img src="img/loading.gif" width="60" /></div>';
-
+var customer_details = [];
 jQuery.fn.center = function () {
     this.css("position", "fixed");
     this.css("top", ($(window).height() / 2) - (this.outerHeight() / 2));
     this.css("left", ($(window).width() / 2) - (this.outerWidth() / 2));
     return this;
 };
-
 function validateEmail(email) {
     var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
+}
+
+
+/**********   Loading Page functions ***/
+
+function loadLocalData() {
+    $("#load_gif").append(loading);
+    $("#load_data").append("Loading app configuration");
+    $.ajax({
+        type: "GET",
+        url: config.api_url + "module=config&action=list",
+        cache: false,
+        success: function (rs) {
+            if (rs.error == false) {
+                setVal(config.app_config, JSON.stringify(rs.data));
+                $(":mobile-pagecontainer").pagecontainer("change", "#intro");
+            }
+        }
+    });
+}
+
+
+/********  Intro Page Functions **/
+
+function getPromoVideo() {
+    var rs = $.parseJSON(getVal(config.app_config));
+    $("#promo-video").attr("src", rs["promo_url"] + "?rel=0&amp;showinfo=0");
+}
+
+function getStart() {
+    if (getVal(config.user_id) != null && getVal(config.user_status) != 0 && getVal(config.employee_role) == 3) {
+        $(":mobile-pagecontainer").pagecontainer("change", "#supplier");
+    } else if (getVal(config.user_id) != null && getVal(config.user_status) != 0 && getVal(config.employee_role) == 4) {
+        $(":mobile-pagecontainer").pagecontainer("change", "#collection");
+    } else if (getVal(config.user_id) != null && getVal(config.user_status) != 0 && getVal(config.employee_role) == 10) {
+        $(":mobile-pagecontainer").pagecontainer("change", "#expensess");
+    } else {
+        $(":mobile-pagecontainer").pagecontainer("change", "#register_one");
+    }
 }
 
 
@@ -143,19 +204,14 @@ function registerPartOne() {
         var data = {mobile: mobile};
         $.ajax({
             type: "POST",
-            url: config.api_url + "module=user&action=user_exist",
+            url: config.api_url + "module=admin&action=already_exist",
             data: data,
             cache: false,
             success: function (rs) {
                 $("#reg_one_spinner").empty();
                 if (rs.error == false) {
-                    $("#reg_err_one .ui-content a").removeAttr("data-rel");
-                    $("#reg_err_one .ui-content a").attr("href", "#register");
-                    setVal(config.user_mobile, mobile);
-                    $(":mobile-pagecontainer").pagecontainer("change", "#register");
-                } else {
-                    $("#reg_err_one .ui-content a").removeAttr("data-rel");
                     $("#reg_err_one .ui-content a").attr("href", "#verify");
+                    $("#reg_err_one .ui-content a").removeAttr("data-rel");
                     setVal(config.user_name, rs.name);
                     setVal(config.user_mobile, mobile);
                     setVal(config.user_email, rs.email);
@@ -167,6 +223,12 @@ function registerPartOne() {
                     setVal(config.cylinder_type, rs.gas_type);
                     setVal(config.user_status, rs.status);
                     setVal(config.user_id, rs.id);
+                    setVal(config.employee_role, rs.employee_role);
+                    $("#reg_err_one_text").html("<b>" + rs.message + "</b>");
+                    $("#reg_err_one").popup("open");
+                } else {
+                    $("#reg_err_one .ui-content a").removeAttr("href");
+                    $("#reg_err_one .ui-content a").attr("data-rel", "back");
                     $("#reg_err_one_text").html("<b>" + rs.message + "</b>");
                     $("#reg_err_one").popup("open");
                 }
@@ -319,17 +381,18 @@ function verifyCode() {
     if (code != "") {
         var details = {
             user: getVal(config.user_id),
-            code: code
+            code: code,
+            device_token: getVal(config.device_token)
         };
         $.ajax({
             type: "POST",
-            url: config.api_url + "module=user&action=verify",
+            url: config.api_url + "module=admin&action=verify",
             data: details,
             cache: false,
             success: function (html) {
                 if (html.error == false) {
                     $("#verify_err .ui-content a").removeAttr("data-rel");
-                    $("#verify_err .ui-content a").attr("onclick", "redirectToShopping()");
+                    $("#verify_err .ui-content a").attr("onclick", "redirectResponseiveEmployee()");
                     setVal(config.user_status, html.status);
                     $("#verify_err_text").html("<b>" + html.message + "</b>");
                     $("#verify_err").popup("open");
@@ -346,8 +409,14 @@ function verifyCode() {
     }
 }
 
-function redirectToShopping() {
-    $(":mobile-pagecontainer").pagecontainer("change", "#shopping");
+function redirectResponseiveEmployee() {
+    if (getVal(config.user_id) != null && getVal(config.user_status) != 0 && getVal(config.employee_role) == 3) {
+        $(":mobile-pagecontainer").pagecontainer("change", "#supplier");
+    } else if (getVal(config.user_id) != null && getVal(config.user_status) != 0 && getVal(config.employee_role) == 4) {
+        $(":mobile-pagecontainer").pagecontainer("change", "#collection");
+    } else {
+        $(":mobile-pagecontainer").pagecontainer("change", "#register_one");
+    }
 }
 
 function resend() {
@@ -360,14 +429,14 @@ function resend() {
         id: id,
         device_token: getVal(config.device_token)
     };
-    startTimer();
     $.ajax({
         type: "POST",
-        url: config.api_url + "module=user&action=resend",
+        url: config.api_url + "module=admin&action=resend",
         data: details,
         cache: false,
         success: function (html) {
             if (html.error == false) {
+                startTimer();
                 $("#verify_err_text").html("<b>" + html.message + "</b>");
                 $("#verify_err").popup("open");
             }
@@ -375,6 +444,160 @@ function resend() {
         error: function (request, status, error) {
             $("#verify_err_text").html("<b>Process fail please try again......</b>");
             $("#verify_err").popup("open");
+        }
+    });
+}
+
+
+/**********   Supplier Page functions ***/
+
+function loadCustomerSupplyDetails() {
+    $("#supplier_spinner").append(loading);
+    $("#customer_list_supplier").empty();
+    $("#cyl_price").val("");
+    $("#full_cyl").val("");
+    $("#empty_cyl").val("");
+    $("#cost").val("");
+    var options = "<option>--Select customer name--</option>"
+    $.ajax({
+        type: "GET",
+        url: config.api_url + "module=admin&action=supply_customer_list",
+        dataType: "json",
+        cache: false,
+        success: function (rs) {
+            if (rs.error == false) {
+                $.each(rs.data, function (cusindex, cusrow) {
+                    options = options + "<option value='" + cusrow.customer_id + "'>" + cusrow.customer_name + "</option>";
+                    customer_details.push({name: cusrow.customer_name, id: cusrow.customer_id, items: []});
+                    $.each(customer_details, function (index, row) {
+                        if (cusrow.customer_id == row.id) {
+                            $.each(cusrow.items, function (itemindex, itemrow) {
+                                row.items.push({id: itemrow.item_id, price: itemrow.item_price, tax: itemrow.tax});
+                            });
+                            return false;
+                        }
+                    });
+                });
+                $("#customer_list_supplier").append(options);
+                $("#supplier_spinner").empty();
+            }
+        },
+        error: function (request, status, error) {
+            $("#supplier_spinner").empty();
+            $("#supplier_popup .ui-content a").removeAttr("href");
+            $("#supplier_popup .ui-content a").attr("data-rel", "back");
+            $("#supplier_popup_text").html("Loading faild please try after sometimes later...");
+            $("#supplier_popup").popup("open");
+        }
+    });
+}
+
+function setPrice() {
+    $("#supplier_spinner").empty();
+    var val = $("#customer_list_supplier").val();
+    $.each(customer_details, function (index, row) {
+        if (row.id == val) {
+            $.each(row.items, function (itemind, itemrow) {
+                if (itemrow.id == 3) {
+                    $("#cyl_price").val(itemrow.price);
+                    return false;
+                }
+            });
+            return false;
+        }
+    });
+    $("#full_cyl").val(1);
+    $("#empty_cyl").val(0);
+    $("#cost").val($("#cyl_price").val() * $("#full_cyl").val());
+}
+
+function calcTotal() {
+    $("#supplier_spinner").empty();
+    var cyls = $("#full_cyl").val();
+    var price = $("#cyl_price").val();
+    $("#cost").val(cyls * price);
+}
+
+function sendSupplyDetails() {
+    $("#supplier_spinner").append(loading);
+    var customer = $("#customer_list_supplier").val();
+    var tax = "";
+    $.each(customer_details, function (cusindex, cusrow) {
+        if (cusrow.id == customer) {
+            $.each(cusrow.item, function (itemindex, itemrow) {
+                if (itemrow == 3) {
+                    tax = itemrow.tax;
+                    return false;
+                }
+            });
+        }
+        return false;
+    });
+    var data = {
+        user_id: getVal(config.user_id),
+        customer_id: customer,
+        item_id: 3,
+        tax: tax,
+        price: $("#cost").val(),
+        full_cyls: $("#full_cyl").val(),
+        empty_cyls: $("#empty_cyl").val(),
+        total: $("#cost").val()
+    };
+    $.ajax({
+        type: "POST",
+        url: config.api_url + "module=admin&action=delivery",
+        data: data,
+        cache: false,
+        success: function (data) {
+            $("#supplier_spinner").empty();
+            if (data.error == false) {
+                $("#supplier_popup .ui-content a").removeAttr("href");
+                $("#supplier_popup .ui-content a").attr("data-rel", "back");
+                $("#supplier_popup_text").html(data.message);
+                $("#supplier_popup").popup("open");
+            } else {
+                $("#supplier_popup .ui-content a").removeAttr("href");
+                $("#supplier_popup .ui-content a").attr("data-rel", "back");
+                $("#supplier_popup_text").html(data.message);
+                $("#supplier_popup").popup("open");
+            }
+        },
+        error: function (request, status, error) {
+            $("#supplier_spinner").empty();
+            $("#supplier_popup .ui-content a").removeAttr("href");
+            $("#supplier_popup .ui-content a").attr("data-rel", "back");
+            $("#supplier_popup_text").html("Loading faild please try after sometimes later...");
+            $("#supplier_popup").popup("open");
+        }
+    });
+}
+
+
+/**********   Collection Page functions ***/
+
+function loadCustomerCollectionDetails() {
+    $.ajax({
+        type: "POST",
+        url: config.api_url + "module=user&action=update",
+        data: data,
+        cache: false,
+        success: function (html) {
+            if (html.error == false) {
+                $("#me_loader").empty();
+                setVal(config.user_name, name);
+                setVal(config.user_email, email);
+                $("#update_success_text").html("<b>" + html.message + "</b>");
+                $("#update_success").popup("open");
+            } else {
+                $("#me_loader").empty();
+                $("#update_success_text").html("<b>" + html.message + "</b>");
+                $("#update_success").popup("open");
+            }
+        },
+        error: function (request, status, error) {
+            $("#me_loader").empty();
+            $("#update_success_text").html("<b>Process failed please try again after some times.....</b>");
+            $("#update_success").popup("open");
         }
     });
 }

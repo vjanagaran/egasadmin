@@ -110,6 +110,10 @@ div[data-role="header"] .ui-title{
     height: auto;
 }
 
+#supplier table, #collection table {
+    width: 100%;
+}
+
 .jayam {
     position: absolute;
     bottom: 10px;
