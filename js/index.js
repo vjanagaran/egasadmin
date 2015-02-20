@@ -492,28 +492,52 @@ function loadCustomerPriceDetails() {
 
 function setPrice() {
     $("#supplier_spinner").empty();
+    var tax = "";
+    var grand_total = "";
+    var tax_amt = "";
+    var price = "";
+    var qty = 1;
     var val = $("#customer_list_supplier").val();
     $.each(customer_price_details, function (index, row) {
         if (row.id == val) {
             $.each(row.items, function (itemind, itemrow) {
                 if (itemrow.id == 3) {
+                    price = itemrow.price;
                     $("#cyl_price").val(itemrow.price);
+                    tax = itemrow.tax;
                     return false;
                 }
             });
             return false;
         }
     });
+    tax_amt = price * qty * tax / 100;
+    grand_total = tax_amt + price * qty;
     $("#full_cyl").val(1);
     $("#empty_cyl").val(0);
-    $("#cost").val($("#cyl_price").val() * $("#full_cyl").val());
+    $("#cost").val(grand_total);
 }
 
 function calcTotal() {
+    var tax = "";
     $("#supplier_spinner").empty();
     var cyls = $("#full_cyl").val();
     var price = $("#cyl_price").val();
-    $("#cost").val(cyls * price);
+    var id = $("#customer_list_supplier").val();
+    $.each(customer_price_details, function (index, row) {
+        if (row.id == id) {
+            $.each(row.items, function (itemindex, itemrow) {
+                if (itemrow.id == 3) {
+                    tax = itemrow.tax;
+                    return false;
+                }
+            });
+            return false;
+        }
+    });
+    var tax_amt = cyls * price * tax / 100;
+    var grand_total = cyls * price + tax_amt;
+    $("#cost").val(grand_total);
 }
 
 function sendSupplyDetails() {
@@ -533,14 +557,10 @@ function sendSupplyDetails() {
             return false;
         });
         var data = {
-            user_id: getVal(config.user_id),
+            employee_id: getVal(config.user_id),
             customer_id: customer,
-            item_id: 3,
-            tax: tax,
-            price: $("#cost").val(),
-            full_cyls: $("#full_cyl").val(),
-            empty_cyls: $("#empty_cyl").val(),
-            total: $("#cost").val()
+            items: [{item_id: 3, quantity: $("#full_cyl").val(), tax: tax, received_cylinder: $("#empty_cyl").val()}],
+            supply_amount: $("#cost").val()
         };
         $.ajax({
             type: "POST",
@@ -592,22 +612,14 @@ function loadCustomerPaymentDetails() {
     var options = "<option value=''>--Select customer name--</option>"
     $.ajax({
         type: "GET",
-        url: config.api_url + "module=admin&action=supply_customer_list",
+        url: config.api_url + "module=admin&action=collection_customer_list",
         dataType: "json",
         cache: false,
         success: function (rs) {
             if (rs.error == false) {
                 $.each(rs.data, function (cusindex, cusrow) {
-                    options = options + "<option value='" + cusrow.customer_id + "'>" + cusrow.customer_name + "</option>";
-                    customer_payment_details.push({name: cusrow.customer_name, id: cusrow.customer_id, items: []});
-                    $.each(customer_payment_details, function (index, row) {
-                        if (cusrow.customer_id == row.id) {
-                            $.each(cusrow.items, function (itemindex, itemrow) {
-                                row.items.push({id: itemrow.item_id, price: itemrow.item_price, tax: itemrow.tax});
-                            });
-                            return false;
-                        }
-                    });
+                    options = options + "<option value='" + cusrow.id + "'>" + cusrow.name + "</option>";
+                    customer_payment_details.push({id: cusrow.id, name: cusrow.name});
                 });
                 $("#customer_list_collection").append(options);
                 $("#collection_spinner").empty();
@@ -625,25 +637,38 @@ function loadCustomerPaymentDetails() {
 
 function setTransactions() {
     $("#collection_spinner").empty();
-    var val = $("#customer_list_supplier").val();
-    $.each(customer_payment_details, function (index, row) {
-        if (row.id == val) {
-            $.each(row.items, function (itemind, itemrow) {
-                if (itemrow.id == 3) {
-                    $("#empty_cyls").val(itemrow.empty);
-                    $("#prev_bal").val(itemrow.balance);
-                    return false;
+    $("#collection_spinner").append(loading);
+    var id = $("#customer_list_collection").val();
+    var data = {id: id};
+    if (id != "") {
+        $.ajax({
+            type: "POST",
+            url: config.api_url + "module=admin&action=getbalance",
+            data: data,
+            cache: false,
+            success: function (rs) {
+                $("#collection_spinner").empty();
+                if (rs.error == false) {
+                    $("#empty_cyls").val(rs.pending_cylinder);
+                    $("#prev_bal").val(rs.pending_amount);
+                } else {
+                    $("#empty_cyls").val(rs.pending_cylinder);
+                    $("#prev_bal").val(rs.pending_amount);
                 }
-            });
-            return false;
-        }
-    });
-    $("#received_pay").val("");
-    $("#total_bal").val($("#prev_bal").val());
+            },
+            error: function (request, status, error) {
+                $("#collection_spinner").empty();
+                $("#collection_popup .ui-content a").removeAttr("href");
+                $("#collection_popup .ui-content a").attr("data-rel", "back");
+                $("#collection_popup_text").html("Loading faild please try after sometimes later...");
+                $("#collection_popup").popup("open");
+            }
+        });
+    }
 }
 
 function calcBalance() {
-    $("#supplier_spinner").empty();
+    $("#collection_spinner").empty();
     var balance = $("#prev_bal").val();
     var received = $("#received_pay").val();
     $("#total_bal").val(balance - received);
@@ -653,25 +678,14 @@ function sendCollectionDetails() {
     var customer = $("#customer_list_collection").val();
     if (customer != "") {
         $("#collection_spinner").append(loading);
-        var tax = "";
-        $.each(customer_payment_details, function (cusindex, cusrow) {
-            if (cusrow.id == customer) {
-                $.each(cusrow.items, function (itemindex, itemrow) {
-                    if (itemrow.id == 3) {
-                        tax = itemrow.tax;
-                        return false;
-                    }
-                });
-            }
-            return false;
-        });
         var data = {
-            user_id: getVal(config.user_id),
-            customer_id: customer,
+            employee_id: getVal(config.user_id),
+            id: customer,
+            amount: $("#received_pay").val()
         };
         $.ajax({
             type: "POST",
-            url: config.api_url + "module=admin&action=delivery",
+            url: config.api_url + "module=admin&action=collection_completed",
             data: data,
             cache: false,
             success: function (data) {
@@ -709,8 +723,44 @@ function sendCollectionDetails() {
 /**********   Expense Page functions ***/
 
 function recordExpense() {
-    $("#expense_type").val();
-    $("#expense_amt").val();
+    var reason = $("#expense_type").val();
+    var amt = $("#expense_amt").val();
+    $("#expense_spinner").empty();
+    $("#expense_spinner").append(loading);
+    var data = {
+        employee_id: getVal(config.user_id),
+        reason: reason,
+        amount: amt
+    };
+    if (amt != "") {
+        $.ajax({
+            type: "POST",
+            url: config.api_url + "module=admin&action=post_expenses",
+            data: data,
+            cache: false,
+            success: function (data) {
+                $("#expense_spinner").empty();
+                if (data.error == false) {
+                    $("#expense_popup .ui-content a").removeAttr("href");
+                    $("#expense_popup .ui-content a").attr("data-rel", "back");
+                    $("#expense_popup_text").html(data.message);
+                    $("#expense_popup").popup("open");
+                } else {
+                    $("#expense_popup .ui-content a").removeAttr("href");
+                    $("#expense_popup .ui-content a").attr("data-rel", "back");
+                    $("#expense_popup_text").html(data.message);
+                    $("#expense_popup").popup("open");
+                }
+            },
+            error: function (request, status, error) {
+                $("#expense_spinner").empty();
+                $("#expense_popup .ui-content a").removeAttr("href");
+                $("#expense_popup .ui-content a").attr("data-rel", "back");
+                $("#expense_popup_text").html("Loading faild please try after sometimes later...");
+                $("#expense_popup").popup("open");
+            }
+        });
+    }
 }
 
 
