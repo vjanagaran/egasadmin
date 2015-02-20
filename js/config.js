@@ -9,7 +9,7 @@ config = function () {
         user_name: "e-gas_user_name",
         user_mobile: "e-gas_user_mobile",
         user_email: "e-gas_user_email",
-        employee_role: "e-gas_user_role",
+        employee_role: "e-gas_employee_role",
         user_password: "e-gas_user_password",
         user_address1: "e-gas_user_address1",
         user_address2: "e-gas_user_address2",

@@ -66,20 +66,18 @@ var router = new $.mobile.Router([{
             },
             supplierPage: function (type, match, ui) {
                 log("Supplier Page", 3);
-                loadCustomerSupplyDetails();
+                loadCustomerPriceDetails();
             },
             collectionPage: function (type, match, ui) {
                 log("Collection Page", 3);
-                loadCustomerCollectionDetails();
+                loadCustomerPaymentDetails();
             },
             mePage: function (type, match, ui) {
                 log("Me Page", 3);
                 showMe();
-                calcCart();
             },
             morePage: function (type, match, ui) {
                 log("More page", 3);
-                calcCart();
             },
             faqPage: function (type, match, ui) {
                 log("FAQ page", 3);
@@ -131,7 +129,8 @@ function log(msg, level) {
 /********  Common Functions and Global Variables **/
 
 var loading = '<div class="align-center"><br/><br/><img src="img/loading.gif" width="60" /></div>';
-var customer_details = [];
+var customer_price_details = [];
+var customer_payment_details = [];
 jQuery.fn.center = function () {
     this.css("position", "fixed");
     this.css("top", ($(window).height() / 2) - (this.outerHeight() / 2));
@@ -166,6 +165,7 @@ function loadLocalData() {
 /********  Intro Page Functions **/
 
 function getPromoVideo() {
+    console.log(getVal(config.user_id) + "&&" + getVal(config.user_status) + "&&" + getVal(config.employee_role));
     var rs = $.parseJSON(getVal(config.app_config));
     $("#promo-video").attr("src", rs["promo_url"] + "?rel=0&amp;showinfo=0");
 }
@@ -175,8 +175,6 @@ function getStart() {
         $(":mobile-pagecontainer").pagecontainer("change", "#supplier");
     } else if (getVal(config.user_id) != null && getVal(config.user_status) != 0 && getVal(config.employee_role) == 4) {
         $(":mobile-pagecontainer").pagecontainer("change", "#collection");
-    } else if (getVal(config.user_id) != null && getVal(config.user_status) != 0 && getVal(config.employee_role) == 10) {
-        $(":mobile-pagecontainer").pagecontainer("change", "#expensess");
     } else {
         $(":mobile-pagecontainer").pagecontainer("change", "#register_one");
     }
@@ -451,14 +449,14 @@ function resend() {
 
 /**********   Supplier Page functions ***/
 
-function loadCustomerSupplyDetails() {
+function loadCustomerPriceDetails() {
     $("#supplier_spinner").append(loading);
     $("#customer_list_supplier").empty();
     $("#cyl_price").val("");
     $("#full_cyl").val("");
     $("#empty_cyl").val("");
     $("#cost").val("");
-    var options = "<option>--Select customer name--</option>"
+    var options = "<option value=''>--Select customer name--</option>"
     $.ajax({
         type: "GET",
         url: config.api_url + "module=admin&action=supply_customer_list",
@@ -468,8 +466,8 @@ function loadCustomerSupplyDetails() {
             if (rs.error == false) {
                 $.each(rs.data, function (cusindex, cusrow) {
                     options = options + "<option value='" + cusrow.customer_id + "'>" + cusrow.customer_name + "</option>";
-                    customer_details.push({name: cusrow.customer_name, id: cusrow.customer_id, items: []});
-                    $.each(customer_details, function (index, row) {
+                    customer_price_details.push({name: cusrow.customer_name, id: cusrow.customer_id, items: []});
+                    $.each(customer_price_details, function (index, row) {
                         if (cusrow.customer_id == row.id) {
                             $.each(cusrow.items, function (itemindex, itemrow) {
                                 row.items.push({id: itemrow.item_id, price: itemrow.item_price, tax: itemrow.tax});
@@ -495,7 +493,7 @@ function loadCustomerSupplyDetails() {
 function setPrice() {
     $("#supplier_spinner").empty();
     var val = $("#customer_list_supplier").val();
-    $.each(customer_details, function (index, row) {
+    $.each(customer_price_details, function (index, row) {
         if (row.id == val) {
             $.each(row.items, function (itemind, itemrow) {
                 if (itemrow.id == 3) {
@@ -519,87 +517,200 @@ function calcTotal() {
 }
 
 function sendSupplyDetails() {
-    $("#supplier_spinner").append(loading);
     var customer = $("#customer_list_supplier").val();
-    var tax = "";
-    $.each(customer_details, function (cusindex, cusrow) {
-        if (cusrow.id == customer) {
-            $.each(cusrow.item, function (itemindex, itemrow) {
-                if (itemrow == 3) {
-                    tax = itemrow.tax;
-                    return false;
+    if (customer != "") {
+        $("#supplier_spinner").append(loading);
+        var tax = "";
+        $.each(customer_price_details, function (cusindex, cusrow) {
+            if (cusrow.id == customer) {
+                $.each(cusrow.items, function (itemindex, itemrow) {
+                    if (itemrow.id == 3) {
+                        tax = itemrow.tax;
+                        return false;
+                    }
+                });
+            }
+            return false;
+        });
+        var data = {
+            user_id: getVal(config.user_id),
+            customer_id: customer,
+            item_id: 3,
+            tax: tax,
+            price: $("#cost").val(),
+            full_cyls: $("#full_cyl").val(),
+            empty_cyls: $("#empty_cyl").val(),
+            total: $("#cost").val()
+        };
+        $.ajax({
+            type: "POST",
+            url: config.api_url + "module=admin&action=delivery",
+            data: data,
+            cache: false,
+            success: function (data) {
+                $("#supplier_spinner").empty();
+                if (data.error == false) {
+                    $("#supplier_popup .ui-content a").removeAttr("href");
+                    $("#supplier_popup .ui-content a").attr("data-rel", "back");
+                    $("#supplier_popup_text").html(data.message);
+                    $("#supplier_popup").popup("open");
+                } else {
+                    $("#supplier_popup .ui-content a").removeAttr("href");
+                    $("#supplier_popup .ui-content a").attr("data-rel", "back");
+                    $("#supplier_popup_text").html(data.message);
+                    $("#supplier_popup").popup("open");
                 }
-            });
-        }
-        return false;
-    });
-    var data = {
-        user_id: getVal(config.user_id),
-        customer_id: customer,
-        item_id: 3,
-        tax: tax,
-        price: $("#cost").val(),
-        full_cyls: $("#full_cyl").val(),
-        empty_cyls: $("#empty_cyl").val(),
-        total: $("#cost").val()
-    };
-    $.ajax({
-        type: "POST",
-        url: config.api_url + "module=admin&action=delivery",
-        data: data,
-        cache: false,
-        success: function (data) {
-            $("#supplier_spinner").empty();
-            if (data.error == false) {
+            },
+            error: function (request, status, error) {
+                $("#supplier_spinner").empty();
                 $("#supplier_popup .ui-content a").removeAttr("href");
                 $("#supplier_popup .ui-content a").attr("data-rel", "back");
-                $("#supplier_popup_text").html(data.message);
-                $("#supplier_popup").popup("open");
-            } else {
-                $("#supplier_popup .ui-content a").removeAttr("href");
-                $("#supplier_popup .ui-content a").attr("data-rel", "back");
-                $("#supplier_popup_text").html(data.message);
+                $("#supplier_popup_text").html("Loading faild please try after sometimes later...");
                 $("#supplier_popup").popup("open");
             }
-        },
-        error: function (request, status, error) {
-            $("#supplier_spinner").empty();
-            $("#supplier_popup .ui-content a").removeAttr("href");
-            $("#supplier_popup .ui-content a").attr("data-rel", "back");
-            $("#supplier_popup_text").html("Loading faild please try after sometimes later...");
-            $("#supplier_popup").popup("open");
-        }
-    });
+        });
+    } else {
+        $("#supplier_spinner").empty();
+        $("#supplier_popup .ui-content a").removeAttr("href");
+        $("#supplier_popup .ui-content a").attr("data-rel", "back");
+        $("#supplier_popup_text").html("Please select the customer name");
+        $("#supplier_popup").popup("open");
+    }
 }
 
 
 /**********   Collection Page functions ***/
 
-function loadCustomerCollectionDetails() {
+function loadCustomerPaymentDetails() {
+    $("#collection_spinner").append(loading);
+    $("#customer_list_collection").empty();
+    $("#empty_cyls").val("");
+    $("#prev_bal").val("");
+    $("#curr_bal").val("");
+    $("#received_pay").val("");
+    $("#total_bal").val("");
+    var options = "<option value=''>--Select customer name--</option>"
     $.ajax({
-        type: "POST",
-        url: config.api_url + "module=user&action=update",
-        data: data,
+        type: "GET",
+        url: config.api_url + "module=admin&action=supply_customer_list",
+        dataType: "json",
         cache: false,
-        success: function (html) {
-            if (html.error == false) {
-                $("#me_loader").empty();
-                setVal(config.user_name, name);
-                setVal(config.user_email, email);
-                $("#update_success_text").html("<b>" + html.message + "</b>");
-                $("#update_success").popup("open");
-            } else {
-                $("#me_loader").empty();
-                $("#update_success_text").html("<b>" + html.message + "</b>");
-                $("#update_success").popup("open");
+        success: function (rs) {
+            if (rs.error == false) {
+                $.each(rs.data, function (cusindex, cusrow) {
+                    options = options + "<option value='" + cusrow.customer_id + "'>" + cusrow.customer_name + "</option>";
+                    customer_payment_details.push({name: cusrow.customer_name, id: cusrow.customer_id, items: []});
+                    $.each(customer_payment_details, function (index, row) {
+                        if (cusrow.customer_id == row.id) {
+                            $.each(cusrow.items, function (itemindex, itemrow) {
+                                row.items.push({id: itemrow.item_id, price: itemrow.item_price, tax: itemrow.tax});
+                            });
+                            return false;
+                        }
+                    });
+                });
+                $("#customer_list_collection").append(options);
+                $("#collection_spinner").empty();
             }
         },
         error: function (request, status, error) {
-            $("#me_loader").empty();
-            $("#update_success_text").html("<b>Process failed please try again after some times.....</b>");
-            $("#update_success").popup("open");
+            $("#collection_spinner").empty();
+            $("#collection_popup .ui-content a").removeAttr("href");
+            $("#collection_popup .ui-content a").attr("data-rel", "back");
+            $("#collection_popup_text").html("Loading faild please try after sometimes later...");
+            $("#collection_popup").popup("open");
         }
     });
+}
+
+function setTransactions() {
+    $("#collection_spinner").empty();
+    var val = $("#customer_list_supplier").val();
+    $.each(customer_payment_details, function (index, row) {
+        if (row.id == val) {
+            $.each(row.items, function (itemind, itemrow) {
+                if (itemrow.id == 3) {
+                    $("#empty_cyls").val(itemrow.empty);
+                    $("#prev_bal").val(itemrow.balance);
+                    return false;
+                }
+            });
+            return false;
+        }
+    });
+    $("#received_pay").val("");
+    $("#total_bal").val($("#prev_bal").val());
+}
+
+function calcBalance() {
+    $("#supplier_spinner").empty();
+    var balance = $("#prev_bal").val();
+    var received = $("#received_pay").val();
+    $("#total_bal").val(balance - received);
+}
+
+function sendCollectionDetails() {
+    var customer = $("#customer_list_collection").val();
+    if (customer != "") {
+        $("#collection_spinner").append(loading);
+        var tax = "";
+        $.each(customer_payment_details, function (cusindex, cusrow) {
+            if (cusrow.id == customer) {
+                $.each(cusrow.items, function (itemindex, itemrow) {
+                    if (itemrow.id == 3) {
+                        tax = itemrow.tax;
+                        return false;
+                    }
+                });
+            }
+            return false;
+        });
+        var data = {
+            user_id: getVal(config.user_id),
+            customer_id: customer,
+        };
+        $.ajax({
+            type: "POST",
+            url: config.api_url + "module=admin&action=delivery",
+            data: data,
+            cache: false,
+            success: function (data) {
+                $("#collection_spinner").empty();
+                if (data.error == false) {
+                    $("#collection_popup .ui-content a").removeAttr("href");
+                    $("#collection_popup .ui-content a").attr("data-rel", "back");
+                    $("#collection_popup_text").html(data.message);
+                    $("#collection_popup").popup("open");
+                } else {
+                    $("#collection_popup .ui-content a").removeAttr("href");
+                    $("#collection_popup .ui-content a").attr("data-rel", "back");
+                    $("#collection_popup_text").html(data.message);
+                    $("#collection_popup").popup("open");
+                }
+            },
+            error: function (request, status, error) {
+                $("#collection_spinner").empty();
+                $("#collection_popup .ui-content a").removeAttr("href");
+                $("#collection_popup .ui-content a").attr("data-rel", "back");
+                $("#collection_popup_text").html("Loading faild please try after sometimes later...");
+                $("#collection_popup").popup("open");
+            }
+        });
+    } else {
+        $("#collection_spinner").empty();
+        $("#collection_popup .ui-content a").removeAttr("href");
+        $("#collection_popup .ui-content a").attr("data-rel", "back");
+        $("#collection_popup_text").html("Please select the customer name");
+        $("#collection_popup").popup("open");
+    }
+}
+
+
+/**********   Expense Page functions ***/
+
+function recordExpense() {
+    $("#expense_type").val();
+    $("#expense_amt").val();
 }
 
 
@@ -661,7 +772,7 @@ function updateUser() {
         };
         $.ajax({
             type: "POST",
-            url: config.api_url + "module=user&action=update",
+            url: config.api_url + "module=admin&action=update",
             data: data,
             cache: false,
             success: function (html) {

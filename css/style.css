@@ -110,7 +110,7 @@ div[data-role="header"] .ui-title{
     height: auto;
 }
 
-#supplier table, #collection table {
+#supplier table, #collection table, #expense table {
     width: 100%;
 }
 

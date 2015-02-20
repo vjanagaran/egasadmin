@@ -158,6 +158,36 @@
             </div>
         </div> <!-- supplier -->
 
+        <div data-role="page" id="expense" data-title="E-Gas Cylinders">
+            <div data-role="header" data-position="fixed">
+                <h1 class="ui-title" role="heading">Expense</h1>
+                <a class="ui-btn-left ui-btn ui-shadow ui-corner-all" href="#mypannel"><i class="fa fa-list"></i></a>
+                <div class="ui-btn-right">
+                    <a class="ui-btn ui-shadow ui-corner-all" href="#faq" data-iconpos="notext"><i class="fa fa-info-circle"></i></a>
+                </div>
+            </div>
+            <div role="main" class="ui-content">
+                <table>
+                    <tbody>
+                        <tr><td>Expense Type</td><td><input type="text" value="" id="expense_type" name="expense_type"></td></tr>
+                        <tr><td>Expense Amount</td><td><input type="text" value="" id="expense_amt" name="expense_amt"></td></tr>
+                        <tr><td><a class="ui-btn" onclick="recordExpense()">Confirm delivery</a></td><td><a class="ui-btn">Cancel</a></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div data-role="popup" id="expense_popup" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
+                <div data-role="header" data-theme="a">
+                    <h1>Alert</h1>
+                </div>
+                <div role="main" class="ui-content">
+                    <p id="expense_popup_text"></p>
+                    <div class="request_btns">
+                        <a href="#" class="ui-btn-1" data-rel="back">Ok</a>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- expense -->
+
         <div data-role="page" id="collection" data-title="E-Gas Cylinders">
             <div data-role="header" data-position="fixed">
                 <h1 class="ui-title" role="heading">Collection Details</h1>
@@ -169,14 +199,16 @@
             <div role="main" class="ui-content">
                 <table>
                     <tbody>
-                        <tr><td>Customer Name</td><td><select data-role="none" id="customer_list_collection"></select></td></tr>
-                        <tr><td>Empty Cylinders</td><td><input type="text" value="" id="" name="" /></td></tr>
-                        <tr><td>Previous Balance</td><td><input type="text" value="" id="" name="" readonly="true"/></td></tr>
-                        <tr><td>Current Balance</td><td><input type="text" value="" id="" name="" readonly="true" /></td></tr>
-                        <tr><td>Payment Received</td><td><input type="text" value="" id="" name="" /></td></tr>
-                        <tr><td>Total Balance</td><td><input type="text" value="" id="" name="" readonly="true" /></td></tr>
+                        <tr><td>Customer Name</td><td><select data-role="none" onchange="setTransactions()" id="customer_list_collection"></select></td></tr>
+                        <tr><td>Empty Cylinders</td><td><input type="text" value="" id="empty_cyls" name="empty_cyls" /></td></tr>
+                        <tr><td>Previous Balance</td><td><input type="text" value="" id="prev_bal" name="prev_bal" readonly="true"/></td></tr>
+                        <tr><td>Current Balance</td><td><input type="text" value="" id="curr_bal" name="curr_bal" readonly="true" /></td></tr>
+                        <tr><td>Payment Received</td><td><input type="text" value="" onblur="calcBalance()" id="received_pay" name="received_pay" /></td></tr>
+                        <tr><td>Total Balance</td><td><input type="text" value="" id="total_bal" name="total_bal" readonly="true" /></td></tr>
+                        <tr><td><a class="ui-btn">Confirm</a></td><td><a class="ui-btn">Cancel</a></td></tr>
                     </tbody>
                 </table>
+                <div id="collection_spinner"></div>
             </div>
             <div data-role="popup" id="collection_popup" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
                 <div data-role="header" data-theme="a">
@@ -384,10 +416,11 @@
         <div data-role="panel" id="mypannel" data-dismissible=”true” data-position="left" data-theme="b" data-position-fixed="true" data-display="overlay">
             <br/><br/> 
             <ul class="ui-content" data-role="listview">
-                <li><a href="#shopping" class="ui-btn"><i class="fa fa-briefcase"></i> Shop</a></li>
-                <li><a href="#expenses" class="ui-btn"><i class="fa fa-paper-plane"></i> Orders</a></li>
                 <li><a href="#me" class="ui-btn"><i class="fa fa-user"></i> Me</a></li>
-                <li><a href="#more" class="ui-btn"><i class="fa fa-bars"></i> More</a></li>
+                <li><a href="#expense" class="ui-btn"><i class="fa fa-user"></i> Record Expense</a></li>
+                <li><a href="#contact" class="ui-btn">Contact</a></li>
+                <li><a href="#feedback" class="ui-btn">Feedback Form</a></li>
+                <li><a href="#about" class="ui-btn">About</a></li>
             </ul>
             <div class="jayam">Powered by  <a onclick="openJayam();" href="#">Jayam Ltd</a></div>
         </div>
