@@ -165,7 +165,6 @@ function loadLocalData() {
 /********  Intro Page Functions **/
 
 function getPromoVideo() {
-    console.log(getVal(config.user_id) + "&&" + getVal(config.user_status) + "&&" + getVal(config.employee_role));
     var rs = $.parseJSON(getVal(config.app_config));
     $("#promo-video").attr("src", rs["promo_url"] + "?rel=0&amp;showinfo=0");
 }
@@ -619,7 +618,7 @@ function loadCustomerPaymentDetails() {
             if (rs.error == false) {
                 $.each(rs.data, function (cusindex, cusrow) {
                     options = options + "<option value='" + cusrow.id + "'>" + cusrow.name + "</option>";
-                    customer_payment_details.push({id: cusrow.id, name: cusrow.name});
+                    customer_payment_details.push({id: cusrow.id, name: cusrow.name, balance: [{pending_cyls: cusrow.balance.pending_cylinder, pending_amt: cusrow.balance.pending_amount}]});
                 });
                 $("#customer_list_collection").append(options);
                 $("#collection_spinner").empty();
@@ -637,31 +636,15 @@ function loadCustomerPaymentDetails() {
 
 function setTransactions() {
     $("#collection_spinner").empty();
-    $("#collection_spinner").append(loading);
     var id = $("#customer_list_collection").val();
-    var data = {id: id};
     if (id != "") {
-        $.ajax({
-            type: "POST",
-            url: config.api_url + "module=admin&action=getbalance",
-            data: data,
-            cache: false,
-            success: function (rs) {
-                $("#collection_spinner").empty();
-                if (rs.error == false) {
-                    $("#empty_cyls").val(rs.pending_cylinder);
-                    $("#prev_bal").val(rs.pending_amount);
-                } else {
-                    $("#empty_cyls").val(rs.pending_cylinder);
-                    $("#prev_bal").val(rs.pending_amount);
-                }
-            },
-            error: function (request, status, error) {
-                $("#collection_spinner").empty();
-                $("#collection_popup .ui-content a").removeAttr("href");
-                $("#collection_popup .ui-content a").attr("data-rel", "back");
-                $("#collection_popup_text").html("Loading faild please try after sometimes later...");
-                $("#collection_popup").popup("open");
+        $.each(customer_payment_details, function (index, row) {
+            if (row.id == id) {
+                $.each(row.balance, function (pendingind, pendingrow) {
+                    $("#empty_cyls").val(pendingrow.pending_cyls);
+                    $("#prev_bal").val(pendingrow.pending_amt);
+                });
+                return false;
             }
         });
     }
