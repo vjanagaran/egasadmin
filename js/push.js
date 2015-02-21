@@ -1,6 +1,6 @@
 var push = {};
-var PWAppID = "7F606-37FFF";
-var GoogleAppID = "564849744820";
+var PWAppID = "B0A27-DA067";
+var GoogleAppID = "801158893206";
 
 push.pushNotification = null;
 push.initPushwoosh = function () {
