@@ -126,7 +126,7 @@ function loadLocalData() {
             if (rs.error == false) {
                 setVal(config.app_config, JSON.stringify(rs.data));
                 if (getVal(config.user_id) != null && getVal(config.user_status) != 0) {
-                    $(":mobile-pagecontainer").pagecontainer("change", "#purchase");
+                    $(":mobile-pagecontainer").pagecontainer("change", "#supplier");
                 } else {
                     $(":mobile-pagecontainer").pagecontainer("change", "#register_one");
                 }
@@ -259,10 +259,8 @@ function verifyCode() {
 }
 
 function redirectResponseiveEmployee() {
-    if (getVal(config.user_id) != null && getVal(config.user_status) != 0 && getVal(config.employee_role) == 3) {
+    if (getVal(config.user_id) != null && getVal(config.user_status) != 0) {
         $(":mobile-pagecontainer").pagecontainer("change", "#supplier");
-    } else if (getVal(config.user_id) != null && getVal(config.user_status) != 0 && getVal(config.employee_role) == 4) {
-        $(":mobile-pagecontainer").pagecontainer("change", "#collection");
     } else {
         $(":mobile-pagecontainer").pagecontainer("change", "#register_one");
     }
