@@ -606,6 +606,31 @@ function sendSupplyDetails() {
 }
 
 
+/**********   Sales Details Page functions ***/
+
+function showSalesDetails() {
+    var data = {
+        id: config.user_id
+    };
+    $.ajax({
+        type: "POST",
+        url: config.api_url + "module=admin&action=sales_details",
+        data: data,
+        cache: false,
+        success: function (data) {
+            if (data.error == false) {
+
+            } else {
+
+            }
+        },
+        error: function (request, status, error) {
+
+        }
+    });
+}
+
+
 /**********   Collection Page functions ***/
 
 function loadCustomerPaymentDetails() {
