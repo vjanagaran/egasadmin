@@ -157,9 +157,9 @@ function loadLocalData() {
             if (rs.error == false) {
                 setVal(config.app_config, JSON.stringify(rs.data));
                 if (getVal(config.user_id) != null && getVal(config.user_status) != 0 && getVal(config.employee_role) == 3) {
-                    $(":mobile-pagecontainer").pagecontainer("change", "#supplier");
+                    $(":mobile-pagecontainer").pagecontainer("change", "#sales");
                 } else if (getVal(config.user_id) != null && getVal(config.user_status) != 0 && getVal(config.employee_role) == 4) {
-                    $(":mobile-pagecontainer").pagecontainer("change", "#collection");
+                    $(":mobile-pagecontainer").pagecontainer("change", "#sales");
                 } else {
                     $(":mobile-pagecontainer").pagecontainer("change", "#register_one");
                 }
