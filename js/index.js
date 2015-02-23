@@ -22,6 +22,9 @@ var router = new $.mobile.Router([{
         "#register_one": {handler: "registerStepOnePage", events: "bs"},
         "#verify": {handler: "verifyPage", events: "bs"},
         "#supplier": {handler: "supplierPage", events: "bs"},
+        "#purchase": {handler: "purchasePage", events: "bs"},
+        "#purchase_list": {handler: "purchaseListPage", events: "bs"},
+        "#view_purchased_item": {handler: "viewpurchaseditemPage", events: "bs"},
         "#collection": {handler: "collectionPage", events: "bs"}
     }],
         {
@@ -46,10 +49,27 @@ var router = new $.mobile.Router([{
             supplierPage: function (type, match, ui) {
                 log("Supplier Page", 3);
                 loadCustomerPriceDetails();
+                calcTotal();
+            },
+            viewpurchaseditemPage: function (type, match, ui) {
+                log("View Ordered Items page", 3);
+                var params = router.getParams(match[1]);
+                loadPurchasedItem(params.id);
+                calcUpdateTotal(params.id);
+            },
+            purchaseListPage: function (type, match, ui) {
+                log("Purchase List Page", 3);
+                showPurchaseList();
+            },
+            purchasePage: function (type, match, ui) {
+                log("Purchase Page", 3);
+                resetPurchase();
+                showSupplierList();
             },
             collectionPage: function (type, match, ui) {
                 log("Collection Page", 3);
                 loadCustomerPaymentDetails();
+                calcBalance();
             }
         }, {
     ajaxApp: true,
@@ -79,13 +99,14 @@ function log(msg, level) {
 var loading = '<div class="align-center"><br/><br/><img src="img/loading.gif" width="60" /></div>';
 var customer_price_details = [];
 var customer_payment_details = [];
+var supplier_details = [];
+var purchased_items = [];
 jQuery.fn.center = function () {
     this.css("position", "fixed");
     this.css("top", ($(window).height() / 2) - (this.outerHeight() / 2));
     this.css("left", ($(window).width() / 2) - (this.outerWidth() / 2));
     return this;
 };
-
 function validateEmail(email) {
     var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
@@ -104,10 +125,8 @@ function loadLocalData() {
         success: function (rs) {
             if (rs.error == false) {
                 setVal(config.app_config, JSON.stringify(rs.data));
-                if (getVal(config.user_id) != null && getVal(config.user_status) != 0 && getVal(config.employee_role) == 3) {
-                    $(":mobile-pagecontainer").pagecontainer("change", "#sales");
-                } else if (getVal(config.user_id) != null && getVal(config.user_status) != 0 && getVal(config.employee_role) == 4) {
-                    $(":mobile-pagecontainer").pagecontainer("change", "#sales");
+                if (getVal(config.user_id) != null && getVal(config.user_status) != 0) {
+                    $(":mobile-pagecontainer").pagecontainer("change", "#purchase");
                 } else {
                     $(":mobile-pagecontainer").pagecontainer("change", "#register_one");
                 }
@@ -282,12 +301,13 @@ function resend() {
 /**********   Supplier Page functions ***/
 
 function loadCustomerPriceDetails() {
+    customer_price_details = [];
     $("#supplier_spinner").append(loading);
     $("#customer_list_supplier").empty();
-    $("#cyl_price").val("");
+    $("#cyl_price").html(0);
     $("#full_cyl").val("");
     $("#empty_cyl").val("");
-    $("#cost").val("");
+    $("#cost").html(0);
     var options = "<option value=''>--Select customer name--</option>"
     $.ajax({
         type: "GET",
@@ -335,7 +355,7 @@ function setPrice() {
             $.each(row.items, function (itemind, itemrow) {
                 if (itemrow.id == 3) {
                     price = itemrow.price;
-                    $("#cyl_price").val(itemrow.price);
+                    $("#cyl_price").html(itemrow.price);
                     tax = itemrow.tax;
                     return false;
                 }
@@ -347,29 +367,35 @@ function setPrice() {
     grand_total = tax_amt + price * qty;
     $("#full_cyl").val(1);
     $("#empty_cyl").val(0);
-    $("#cost").val(grand_total);
+    $("#cost").html(grand_total);
 }
 
 function calcTotal() {
     var tax = "";
     $("#supplier_spinner").empty();
-    var cyls = $("#full_cyl").val();
-    var price = $("#cyl_price").val();
-    var id = $("#customer_list_supplier").val();
-    $.each(customer_price_details, function (index, row) {
-        if (row.id == id) {
-            $.each(row.items, function (itemindex, itemrow) {
-                if (itemrow.id == 3) {
-                    tax = itemrow.tax;
+    $("#full_cyl").keyup(function (e) {
+        var cyls = $(this).val();
+        var price = $("#cyl_price").html();
+        if (cyls != 0) {
+            var id = $("#customer_list_supplier").val();
+            $.each(customer_price_details, function (index, row) {
+                if (row.id == id) {
+                    $.each(row.items, function (itemindex, itemrow) {
+                        if (itemrow.id == 3) {
+                            tax = itemrow.tax;
+                            return false;
+                        }
+                    });
                     return false;
                 }
             });
-            return false;
+            var tax_amt = cyls * price * tax / 100;
+            var grand_total = cyls * price + tax_amt;
+            $("#cost").html(grand_total);
+        } else {
+            $("#cost").html(0);
         }
     });
-    var tax_amt = cyls * price * tax / 100;
-    var grand_total = cyls * price + tax_amt;
-    $("#cost").val(grand_total);
 }
 
 function sendSupplyDetails() {
@@ -392,7 +418,7 @@ function sendSupplyDetails() {
             employee_id: getVal(config.user_id),
             customer_id: customer,
             items: [{item_id: 3, quantity: $("#full_cyl").val(), tax: tax, received_cylinder: $("#empty_cyl").val()}],
-            supply_amount: $("#cost").val()
+            supply_amount: $("#cost").html()
         };
         $.ajax({
             type: "POST",
@@ -431,41 +457,252 @@ function sendSupplyDetails() {
 }
 
 
-/**********   Sales Details Page functions ***/
+/**********   Purchase List Page functions ***/
 
-function showSalesDetails() {
-    var data = {
-        id: config.user_id
-    };
+function showPurchaseList() {
+    purchased_items = [];
+    $("#purchase_list_items").empty();
+    $("#purchase_list_items").append(loading);
+    var out = "";
     $.ajax({
-        type: "POST",
-        url: config.api_url + "module=admin&action=sales_details",
-        data: data,
+        type: "GET",
+        url: config.api_url + "module=admin&action=purchase_list",
+        dataType: "json",
         cache: false,
         success: function (data) {
             if (data.error == false) {
-
-            } else {
-
+                $("#purchase_list_items").empty();
+                out + '<div><ul data-role="listview" class="ui-content ui-listview" data-inset="true" data-theme="a">';
+                $.each(data.data, function (index, row) {
+                    purchased_items.push({id: row.id, supplier_name: row.supplier_name, price: row.price, qty: row.quantity, date: row.date, total: row.total_amount, item_name: row.item_name, cheque: row.chq_no});
+                    out = out + '<li><a class="ui-btn ui-corner-all" href="#view_purchased_item?id=' + row.id + '">#' + row.id + '. on ' + $.format.date(row.date, "dd-MMM-yy") + ' value of ' + parseFloat(row.total_amount).toFixed(2) + '</a></li>';
+                });
+                out = out + '</ul></div>';
+                $(out).appendTo("#purchase_list_items").enhanceWithin();
             }
         },
         error: function (request, status, error) {
-
+            $("#purchase_list_items").empty();
+            $("#purchase_list_items").append("Loading failed try again!!");
         }
     });
+}
+
+
+/**********   View Purchased Item Page functions ***/
+
+function loadPurchasedItem(id) {
+    $("#purchased_item_detail").empty();
+    $("#purchased_item_spinner").empty();
+    var out = "";
+    out = out + '<table><tbody>';
+    $.each(purchased_items, function (index, row) {
+        if (id == row.id) {
+            out = out + '<tr><td>Employee Name</td><td>' + row.supplier_name + '</td></tr>';
+            out = out + '<tr><td>Net Weight</td><td>' + row.item_name + '</td></tr>';
+            out = out + '<tr><td>Rate</td><td><input type="text" value="' + row.price + '" id="update_price_' + id + '"/> </td></tr>';
+            out = out + '<tr><td>Quantity</td><td><input type="text" value="' + row.qty + '" id="update_qty_' + id + '"/> </td></tr>';
+            out = out + '<tr><td>Total</td><td><span id="update_total_' + id + '">' + row.total + '</span></td></tr>';
+            out = out + '<tr><td>Cheque No</td><td><input type="text" value="' + row.cheque + '" id="update_cheque_' + id + '"/> </td></tr>';
+            out = out + '<tr><td colspan="2"><a class="ui-btn ui-corner-all" onclick="updatePurchase(' + id + ')">Update Purchase</a></td></tr>';
+            return false;
+        }
+    });
+    out = out + '</tbody></table>';
+    $(out).appendTo("#purchased_item_detail").enhanceWithin();
+}
+
+function calcUpdateTotal(id) {
+    $("#purchased_item_spinner").empty();
+    $("#update_qty_" + id).keyup(function (e) {
+        var rate = $("#update_price_" + id).val();
+        if (rate != 0) {
+            var qty = $(this).val();
+            $("#update_total_" + id).html(rate * qty);
+        }
+    });
+    $("#update_price_" + id).keyup(function (e) {
+        var qty = $("#update_qty_" + id).val();
+        if (qty != 0) {
+            var rate = $(this).val();
+            $("#update_total_" + id).html(rate * qty);
+        }
+    });
+}
+
+function updatePurchase(id) {
+    $("#view_purchased_item .ui-content a").addClass("remove-item");
+    $("#purchased_item_spinner").empty();
+    $("#purchased_item_spinner").append(loading);
+    var data = {
+        id: id,
+        rate: $("#update_price_" + id).val(),
+        quantity: $("#update_qty_" + id).val(),
+        total_amount: $("#update_total_" + id).html(),
+        chq_no: $("#update_cheque_" + id).val()
+    };
+    $.ajax({
+        type: "POST",
+        url: config.api_url + "module=admin&action=purchase_update",
+        data: data,
+        cache: false,
+        success: function (data) {
+            $("#view_purchased_item .ui-content a").removeClass("remove-item");
+            $("#purchased_item_spinner").empty();
+            if (data.error == false) {
+                $("#view_purchase_popup .ui-content a").attr("href", "#purchase_list");
+                $("#view_purchase_popup .ui-content a").removeAttr("data-rel");
+                $("#view_purchase_popup_text").html(data.message);
+                $("#view_purchase_popup").popup("open");
+            } else {
+                $("#view_purchase_popup .ui-content a").attr("data-rel", "back");
+                $("#view_purchase_popup .ui-content a").removeAttr("href");
+                $("#view_purchase_popup_text").html(data.message);
+                $("#view_purchase_popup").popup("open");
+            }
+        },
+        error: function (request, status, error) {
+            $("#view_purchased_item .ui-content a").removeClass("remove-item");
+            $("#view_purchase_popup .ui-content a").attr("data-rel", "back");
+            $("#view_purchase_popup .ui-content a").removeAttr("href");
+            $("#view_purchase_popup_text").html(data.message);
+            $("#view_purchase_popup").popup("open");
+        }
+    });
+}
+
+
+/**********   Purchase Details Page functions ***/
+
+function resetPurchase() {
+    $("#purchase_spinner").empty();
+    $("#qty").val(0);
+    $("#rate").val(0);
+    $("#qty").keyup(function (e) {
+        var rate = $("#rate").val();
+        if (rate != 0) {
+            var qty = $(this).val();
+            $("#purchase_total").html(rate * qty);
+        }
+    });
+    $("#rate").keyup(function (e) {
+        var qty = $("#qty").val();
+        if (qty != 0) {
+            var rate = $(this).val();
+            $("#purchase_total").html(rate * qty);
+        }
+    });
+}
+
+function showSupplierList() {
+    supplier_details = [];
+    $("#employee_list").empty();
+    $("#purchase_spinner").empty();
+    $("#purchase_spinner").append(loading);
+    var options = "<option value=''>--Select Supplier--</option>";
+    $.ajax({
+        type: "GET",
+        url: config.api_url + "module=admin&action=supplier_list",
+        dataType: "json",
+        cache: false,
+        success: function (data) {
+            $("#purchase_spinner").empty();
+            if (data.error == false) {
+                $.each(data.data, function (index, row) {
+                    supplier_details.push({id: row.id, name: row.name, code: row.supplier_no});
+                    options = options + "<option value='" + row.id + "'>" + row.name + "</option>";
+                });
+                $("#employee_list").append(options);
+            }
+        },
+        error: function (request, status, error) {
+            $("#purchase_spinner").empty();
+            $("#purchase_popup .ui-content a").removeAttr("href");
+            $("#purchase_popup .ui-content a").attr("data-rel", "back");
+            $("#purchase_popup_text").html("Loading supplier list faild. Please retry!!");
+            $("#purchase_popup").popup("open");
+        }
+    });
+}
+
+function getSupplierCode() {
+    $("#purchase_spinner").empty();
+    var id = $("#employee_list").val()
+    if (id != "") {
+        $.each(supplier_details, function (index, row) {
+            if (id == row.id) {
+                $("#emp_code").html(row.code);
+                return false;
+            }
+        });
+    }
+}
+
+function submitPurchase() {
+    var supplier_id = $("#employee_list").val();
+    if (supplier_id != "") {
+        $("#purchase .ui-content a").addClass("remove-item");
+        $("#purchase_spinner").empty();
+        $("#purchase_spinner").append(loading);
+        var data = {
+            supplier_id: supplier_id,
+            item_id: $("#net_weight").val(),
+            rate: $("#rate").val(),
+            quantity: $("#qty").val(),
+            total_amount: $("#purchase_total").html(),
+            chq_no: $("#cheque_no").val()
+        };
+        $.ajax({
+            type: "POST",
+            url: config.api_url + "module=admin&action=purchase",
+            data: data,
+            cache: false,
+            success: function (data) {
+                $("#purchase .ui-content a").removeClass("remove-item");
+                if (data.error == false) {
+                    $("#purchase_spinner").empty();
+                    $("#purchase_popup .ui-content a").removeAttr("href");
+                    $("#purchase_popup .ui-content a").attr("data-rel", "back");
+                    $("#purchase_popup_text").html(data.message);
+                    $("#purchase_popup").popup("open");
+                } else {
+                    $("#purchase_spinner").empty();
+                    $("#purchase_popup .ui-content a").removeAttr("href");
+                    $("#purchase_popup .ui-content a").attr("data-rel", "back");
+                    $("#purchase_popup_text").html(data.message);
+                    $("#purchase_popup").popup("open");
+                }
+            },
+            error: function (request, status, error) {
+                $("#purchase .ui-content a").removeClass("remove-item");
+                $("#purchase_spinner").empty();
+                $("#purchase_popup .ui-content a").removeAttr("href");
+                $("#purchase_popup .ui-content a").attr("data-rel", "back");
+                $("#purchase_popup_text").html("Process faild. Please retry!!");
+                $("#purchase_popup").popup("open");
+            }
+        });
+    } else {
+        $("#purchase_spinner").empty();
+        $("#purchase_popup .ui-content a").removeAttr("href");
+        $("#purchase_popup .ui-content a").attr("data-rel", "back");
+        $("#purchase_popup_text").html("Select a supplier");
+        $("#purchase_popup").popup("open");
+    }
 }
 
 
 /**********   Collection Page functions ***/
 
 function loadCustomerPaymentDetails() {
+    customer_payment_details = [];
     $("#collection_spinner").append(loading);
     $("#customer_list_collection").empty();
-    $("#empty_cyls").val("");
-    $("#prev_bal").val("");
+    $("#empty_cyls").html(0);
+    $("#prev_bal").html(0);
     $("#curr_bal").val("");
     $("#received_pay").val("");
-    $("#total_bal").val("");
+    $("#total_bal").html(0);
     var options = "<option value=''>--Select customer name--</option>"
     $.ajax({
         type: "GET",
@@ -499,8 +736,8 @@ function setTransactions() {
         $.each(customer_payment_details, function (index, row) {
             if (row.id == id) {
                 $.each(row.balance, function (pendingind, pendingrow) {
-                    $("#empty_cyls").val(pendingrow.pending_cyls);
-                    $("#prev_bal").val(pendingrow.pending_amt);
+                    $("#empty_cyls").html(pendingrow.pending_cyls);
+                    $("#prev_bal").html(pendingrow.pending_amt);
                 });
                 return false;
             }
@@ -510,9 +747,16 @@ function setTransactions() {
 
 function calcBalance() {
     $("#collection_spinner").empty();
-    var balance = $("#prev_bal").val();
-    var received = $("#received_pay").val();
-    $("#total_bal").val(balance - received);
+    $("#received_pay").keyup(function (e) {
+        var balance = $("#prev_bal").html();
+        var received = $(this).val();
+        if (received != 0) {
+            $("#total_bal").html(balance - received);
+        } else {
+            $("#total_bal").html(balance);
+        }
+    });
+
 }
 
 function sendCollectionDetails() {

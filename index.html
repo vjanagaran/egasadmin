@@ -51,35 +51,12 @@
             </script>
         </div> <!-- loading page-->
 
-        <!-- <div data-role="page" id="intro" data-title="E-Gas Cylinders">
-             <div role="main" class="ui-content">
-                 <h3 class="align-center">Instant cooking gas connection</h3>
-                 <div class="align-center">
-                     <iframe id="promo-video" class="homevideo" frameborder=0 allowfullscreen></iframe>
-                 </div>
-                 <div class="ui-grid-solo">
-                     <div class="align-center ui-block-a"><a class="ui-btn ui-btn-corner-all" data-rel="popup" data-transition="pop" href="#intropopup">Get started</a></div>
-                 </div>
-             </div>
-             <div data-role="popup" id="intropopup" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
-                 <div data-role="header" data-theme="a">
-                     <h1>Information</h1>
-                 </div>
-                 <div role="main" class="ui-content">
-                     <p>Thanks for using our Beta version. Currently, we support only Super gas connections and deliveries in selected parts of Chennai</p>
-                     <div class="request_btns">
-                         <a href="#" class="ui-btn-1" onclick="getStart();">Ok</a>
-                     </div>
-                 </div>
-             </div>
-         </div> <!-- introduction page-->
-
         <div data-role="page" id="register_one" data-title="E-Gas Cylinders">
             <div data-role="header" data-position="fixed">
                 <h1 class="ui-title" role="heading">Registration</h1>
             </div>
             <div role="main" class="ui-content">
-                <input type="text" name="mobile" id="mobile" value="" onblur="" placeholder="Your Mobile Number" />
+                <input type="text" name="mobile" id="mobile" value="" placeholder="Your Mobile Number" />
                 <a class="ui-btn ui-corner-all ui-btn-a" href="#" onclick="registerPartOne();">Proceed</a>
                 <div id="reg_one_spinner"></div>
             </div>
@@ -118,25 +95,71 @@
             </div>
         </div> <!-- verify -->
 
-        <div data-role="page" id="sales" data-title="E-Gas Cylinders">
+        <div data-role="page" id="purchase" data-title="E-Gas Cylinders">
             <div data-role="header" data-position="fixed">
-                <h1 class="ui-title" role="heading">Sales</h1>
+                <a class="ui-btn-left ui-btn ui-shadow ui-corner-all" href="#mypannel"><i class="fa fa-list"></i></a>
+                <h1 class="ui-title" role="heading">Record Purchase</h1>
             </div>
             <div role="main" class="ui-content">
-                <div id="sales_details"></div>
+                <table>
+                    <tbody>
+                        <tr><td>Employee Name</td><td><select data-role="none" onchange="getSupplierCode()" name="employee_list" id="employee_list"></select></td></tr>
+                        <tr><td>Emp Code</td><td><span id="emp_code"></span></td></tr>
+                        <tr><td>Gas Type</td><td><select data-role="none" name="gas_type" id="gas_type"><option value="1">Commercial</option></select></td></tr>
+                        <tr><td>Net Weight</td><td><select data-role="none" name="net_weight" id="net_weight"><option value="3">Commercial 17Kg</option></select></td></tr>
+                        <tr><td>Rate</td><td><input type="text" value="" id="rate" name="rate" /></td></tr>
+                        <tr><td>Quantity</td><td><input type="text" value="" id="qty" name="qty" /></td></tr>
+                        <tr><td>Total</td><td><span id="purchase_total"></span></td></tr>
+                        <tr><td>Cheque No.</td><td><input type="text" value="" name="cheque_no" id="cheque_no" /></td></tr>
+                        <tr><td colspan="2"><a class="ui-btn ui-corner-all" onclick="submitPurchase()">Record Purchase</a></td></tr>
+                    </tbody>
+                </table>
+                <div id="purchase_spinner"></div>
             </div>
-            <div data-role="popup" id="sales_popup" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
+            <div data-role="popup" id="purchase_popup" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
                 <div data-role="header" data-theme="a">
                     <h1>Alert</h1>
                 </div>
                 <div role="main" class="ui-content">
-                    <p id="sales_popup_text"></p>
+                    <p id="purchase_popup_text"></p>
                     <div class="request_btns">
                         <a href="#" class="ui-btn-1" data-rel="back">Ok</a>
                     </div>
                 </div>
             </div>
-        </div> <!-- sales -->
+        </div> <!-- purchase -->
+
+        <div data-role="page" id="view_purchased_item" data-title="E-Gas Cylinders">
+            <div data-role="header" data-position="fixed">
+                <a data-rel="back"><i class="fa fa-arrow-left"></i></a>
+                <h1 class="ui-title" role="heading">Item Details</h1>
+            </div>
+            <div role="main" class="ui-content">
+                <div id="purchased_item_detail"></div>
+                <div id="purchased_item_spinner"></div>
+            </div>
+            <div data-role="popup" id="view_purchase_popup" data-overlay-theme="a" data-theme="a" data-dismissible="false" style="max-width:400px;">
+                <div data-role="header" data-theme="a">
+                    <h1>Alert</h1>
+                </div>
+                <div role="main" class="ui-content">
+                    <p id="view_purchase_popup_text"></p>
+                    <div class="request_btns">
+                        <a href="#" class="ui-btn-1" data-rel="back">Ok</a>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- purchase list -->
+
+        <div data-role="page" id="purchase_list" data-title="E-Gas Cylinders">
+            <div data-role="header" data-position="fixed">
+                <a class="ui-btn-left ui-btn ui-shadow ui-corner-all" href="#mypannel"><i class="fa fa-list"></i></a>
+                <h1 class="ui-title" role="heading">Purchase List</h1>
+            </div>
+            <div role="main" class="ui-content">
+                <div id="purchase_list_items"></div>
+            </div>
+        </div> <!-- purchase list -->
 
         <div data-role="page" id="supplier" data-title="E-Gas Cylinders">
             <div data-role="header" data-position="fixed">
@@ -147,10 +170,10 @@
                 <table>
                     <tbody>
                         <tr><td>Customer Name</td><td><select data-role="none" name="customer_list_supplier" onchange="setPrice()" id="customer_list_supplier"></select></td></tr>
-                        <tr><td>Price</td><td><input type="text" value="" id="cyl_price" name="cyl_price" readonly="true" /></td></tr>
-                        <tr><td>Full Cylinder</td><td><input onblur="calcTotal()" type="text" value="" id="full_cyl" name="full_cyl" /></td></tr>
+                        <tr><td>Price</td><td><span id="cyl_price"></span></td></tr>
+                        <tr><td>Full Cylinder</td><td><input type="text" value="" id="full_cyl" name="full_cyl" /></td></tr>
                         <tr><td>Empty Cylinder</td><td><input type="text" value="" id="empty_cyl" name="empty_cyl" /></td></tr>
-                        <tr><td>Total<br/><small>*Inclusive all taxes</small></td><td><input readonly="" type="text" value="" id="cost" name="cost" /></td></tr>
+                        <tr><td>Total<br/><small>*Inclusive all taxes</small></td><td><span id="cost"></span></td></tr>
                         <tr><td><a class="ui-btn" onclick="sendSupplyDetails()">Confirm delivery</a></td><td><a class="ui-btn">Cancel</a></td></tr>
                     </tbody>
                 </table>
@@ -171,9 +194,8 @@
 
         <div data-role="page" id="expense" data-title="E-Gas Cylinders">
             <div data-role="header" data-position="fixed">
-                <a data-rel="back" data-icon="carat-l" data-iconpos="notext">Menu</a>
                 <h1 class="ui-title" role="heading">Expense</h1>
-                <a class="ui-btn-right ui-btn ui-shadow ui-corner-all" href="#mypannel"><i class="fa fa-list"></i></a>
+                <a class="ui-btn-left ui-btn ui-shadow ui-corner-all" href="#mypannel"><i class="fa fa-list"></i></a>
             </div>
             <div role="main" class="ui-content">
                 <table>
@@ -207,10 +229,10 @@
                 <table>
                     <tbody>
                         <tr><td>Customer Name</td><td><select data-role="none" onchange="setTransactions()" id="customer_list_collection"></select></td></tr>
-                        <tr><td>Empty Cylinders</td><td><input type="text" value="" id="empty_cyls" readonly="true" name="empty_cyls" /></td></tr>
-                        <tr><td>Previous Balance</td><td><input type="text" value="" id="prev_bal" name="prev_bal" readonly="true"/></td></tr>
-                        <tr><td>Payment Received</td><td><input type="text" value="" onblur="calcBalance()" id="received_pay" name="received_pay" /></td></tr>
-                        <tr><td>Total Balance</td><td><input type="text" value="" id="total_bal" name="total_bal" readonly="true" /></td></tr>
+                        <tr><td>Empty Cylinders</td><td><span id="empty_cyls"></span></td></tr>
+                        <tr><td>Previous Balance</td><td><span id="prev_bal"></span></td></tr>
+                        <tr><td>Payment Received</td><td><input type="text" value="" id="received_pay" name="received_pay" /></td></tr>
+                        <tr><td>Total Balance</td><td><span id="total_bal"></span></td></tr>
                         <tr><td><a class="ui-btn" onclick="sendCollectionDetails()">Confirm</a></td><td><a class="ui-btn">Cancel</a></td></tr>
                     </tbody>
                 </table>
@@ -244,10 +266,11 @@
         <div data-role="panel" id="mypannel" data-dismissible=”true” data-position="left" data-theme="b" data-position-fixed="true" data-display="overlay">
             <br/><br/> 
             <ul class="ui-content" data-role="listview">
-                <li><a href="#expense" class="ui-btn"><i class="fa fa-briefcase"></i> Purchase</a></li>
-                <li><a href="#expense" class="ui-btn"><i class="fa fa-user"></i> Sales</a></li>
-                <li><a href="#expense" class="ui-btn"><i class="fa fa-truck"></i> Delivery</a></li>
+                <li><a href="#purchase" class="ui-btn"><i class="fa fa-briefcase"></i> Purchase</a></li>
+                <li><a href="#supplier" class="ui-btn"><i class="fa fa-user"></i> Sales</a></li>
+                <li><a href="#collection" class="ui-btn"><i class="fa fa-truck"></i> Delivery</a></li>
                 <li><a href="#expense" class="ui-btn"><i class="fa fa-cubes"></i> Record Expense</a></li>
+                <li><a href="#purchase_list" class="ui-btn"><i class="fa fa-cubes"></i> View Purchases</a></li>
             </ul>
         </div>
     </body>
