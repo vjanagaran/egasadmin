@@ -154,6 +154,7 @@ function registerPartOne() {
     if (validMobile()) {
         $("#reg_one_spinner").empty();
         $("#reg_one_spinner").append(loading);
+        $("#register_one .ui-content a").addClass("remove-item");
         var mobile = $.trim($('#mobile').val());
         var data = {mobile: mobile};
         $.ajax({
@@ -163,6 +164,7 @@ function registerPartOne() {
             cache: false,
             success: function (rs) {
                 $("#reg_one_spinner").empty();
+                $("#register_one .ui-content a").removeClass("remove-item");
                 if (rs.error == false) {
                     $("#reg_err_one .ui-content a").attr("href", "#verify");
                     $("#reg_err_one .ui-content a").removeAttr("data-rel");
@@ -181,6 +183,7 @@ function registerPartOne() {
                     $("#reg_err_one_text").html("<b>" + rs.message + "</b>");
                     $("#reg_err_one").popup("open");
                 } else {
+                    $("#register_one .ui-content a").removeClass("remove-item");
                     $("#reg_err_one .ui-content a").removeAttr("href");
                     $("#reg_err_one .ui-content a").attr("data-rel", "back");
                     $("#reg_err_one_text").html("<b>" + rs.message + "</b>");
@@ -188,6 +191,7 @@ function registerPartOne() {
                 }
             },
             error: function (request, status, error) {
+                $("#register_one .ui-content a").removeClass("remove-item");
                 $("#reg_one_spinner").empty();
                 $("#reg_err_one .ui-content a").removeAttr("href");
                 $("#reg_err_one .ui-content a").attr("data-rel", "back");
@@ -211,6 +215,7 @@ function resetMobileNo() {
 /**********   Verify Page functions ***/
 
 function startTimer() {
+    $("#verify_spinner").empty();
     clearInterval();
     $("#resend").empty();
     var resend = '<a href="#" class="ui-btn ui-btn-corner-all" onclick="resend();"> Resend Code</a>';
@@ -226,6 +231,9 @@ function startTimer() {
 }
 
 function verifyCode() {
+    $("#verify_spinner").empty();
+    $("#verify_spinner").append(loading);
+    $("#verify .ui-content a").addClass("remove-item");
     var code = $("#code").val();
     if (code != "") {
         var details = {
@@ -239,9 +247,11 @@ function verifyCode() {
             data: details,
             cache: false,
             success: function (html) {
+                $("#verify_spinner").empty();
+                $("#verify .ui-content a").removeClass("remove-item");
                 if (html.error == false) {
                     $("#verify_err .ui-content a").removeAttr("data-rel");
-                    $("#verify_err .ui-content a").attr("onclick", "redirectResponseiveEmployee()");
+                    $("#verify_err .ui-content a").attr("onclick", "redirectSupplier()");
                     setVal(config.user_status, html.status);
                     $("#verify_err_text").html("<b>" + html.message + "</b>");
                     $("#verify_err").popup("open");
@@ -251,6 +261,8 @@ function verifyCode() {
                 }
             },
             error: function (request, status, error) {
+                $("#verify .ui-content a").removeClass("remove-item");
+                $("#verify_spinner").empty();
                 $("#err_msg").empty();
                 $("#err_msg").append("Process fail please try again......");
             }
@@ -258,7 +270,7 @@ function verifyCode() {
     }
 }
 
-function redirectResponseiveEmployee() {
+function redirectSupplier() {
     if (getVal(config.user_id) != null && getVal(config.user_status) != 0) {
         $(":mobile-pagecontainer").pagecontainer("change", "#supplier");
     } else {
@@ -267,6 +279,8 @@ function redirectResponseiveEmployee() {
 }
 
 function resend() {
+    $("#verify .ui-content a").addClass("remove-item");
+    $("#verify_spinner").append(loading);
     var mobile = getVal(config.user_mobile);
     var email = getVal(config.user_email);
     var id = getVal(config.user_id);
@@ -282,6 +296,8 @@ function resend() {
         data: details,
         cache: false,
         success: function (html) {
+            $("#verify_spinner").empty();
+            $("#verify .ui-content a").removeClass("remove-item");
             if (html.error == false) {
                 startTimer();
                 $("#verify_err_text").html("<b>" + html.message + "</b>");
@@ -289,6 +305,8 @@ function resend() {
             }
         },
         error: function (request, status, error) {
+            $("#verify_spinner").empty();
+            $("#verify .ui-content a").removeClass("remove-item");
             $("#verify_err_text").html("<b>Process fail please try again......</b>");
             $("#verify_err").popup("open");
         }
@@ -399,6 +417,7 @@ function calcTotal() {
 function sendSupplyDetails() {
     var customer = $("#customer_list_supplier").val();
     if (customer != "") {
+        $("#supplier .ui-content a").addClass("remove-item");
         $("#supplier_spinner").append(loading);
         var tax = "";
         $.each(customer_price_details, function (cusindex, cusrow) {
@@ -424,12 +443,14 @@ function sendSupplyDetails() {
             data: data,
             cache: false,
             success: function (data) {
+                $("#supplier .ui-content a").removeClass("remove-item");
                 $("#supplier_spinner").empty();
                 if (data.error == false) {
                     $("#supplier_popup .ui-content a").removeAttr("href");
                     $("#supplier_popup .ui-content a").attr("data-rel", "back");
                     $("#supplier_popup_text").html(data.message);
                     $("#supplier_popup").popup("open");
+                    loadCustomerPriceDetails();
                 } else {
                     $("#supplier_popup .ui-content a").removeAttr("href");
                     $("#supplier_popup .ui-content a").attr("data-rel", "back");
@@ -438,6 +459,7 @@ function sendSupplyDetails() {
                 }
             },
             error: function (request, status, error) {
+                $("#supplier .ui-content a").removeClass("remove-item");
                 $("#supplier_spinner").empty();
                 $("#supplier_popup .ui-content a").removeAttr("href");
                 $("#supplier_popup .ui-content a").attr("data-rel", "back");
@@ -461,7 +483,7 @@ function showPurchaseList() {
     purchased_items = [];
     $("#purchase_list_items").empty();
     $("#purchase_list_items").append(loading);
-    var out = "";
+    var out = '<div><ul data-role="listview" data-inset="true" data-theme="a">';
     $.ajax({
         type: "GET",
         url: config.api_url + "module=admin&action=purchase_list",
@@ -470,10 +492,9 @@ function showPurchaseList() {
         success: function (data) {
             if (data.error == false) {
                 $("#purchase_list_items").empty();
-                out + '<div><ul data-role="listview" class="ui-content ui-listview" data-inset="true" data-theme="a">';
                 $.each(data.data, function (index, row) {
                     purchased_items.push({id: row.id, supplier_name: row.supplier_name, price: row.price, qty: row.quantity, date: row.date, total: row.total_amount, item_name: row.item_name, cheque: row.chq_no});
-                    out = out + '<li><a class="ui-btn ui-corner-all" href="#view_purchased_item?id=' + row.id + '">#' + row.id + '. on ' + $.format.date(row.date, "dd-MMM-yy") + ' value of ' + parseFloat(row.total_amount).toFixed(2) + '</a></li>';
+                    out = out + '<li><a class="ui-btn ui-btn-corner-all" href="#view_purchased_item?id=' + row.id + '">#' + row.id + '. on ' + $.format.date(row.date, "dd-MMM-yy") + ' value of ' + parseInt(row.total_amount) + '</a></li>';
                 });
                 out = out + '</ul></div>';
                 $(out).appendTo("#purchase_list_items").enhanceWithin();
@@ -492,15 +513,16 @@ function showPurchaseList() {
 function loadPurchasedItem(id) {
     $("#purchased_item_detail").empty();
     $("#purchased_item_spinner").empty();
+    $("#purchased_item_heading").html("Purchased id # " + id);
     var out = "";
     out = out + '<table><tbody>';
     $.each(purchased_items, function (index, row) {
         if (id == row.id) {
             out = out + '<tr><td>Employee Name</td><td>' + row.supplier_name + '</td></tr>';
             out = out + '<tr><td>Net Weight</td><td>' + row.item_name + '</td></tr>';
-            out = out + '<tr><td>Rate</td><td><input type="text" value="' + row.price + '" id="update_price_' + id + '"/> </td></tr>';
+            out = out + '<tr><td>Rate</td><td><input type="text" value="' + parseInt(row.price) + '" id="update_price_' + id + '"/> </td></tr>';
             out = out + '<tr><td>Quantity</td><td><input type="text" value="' + row.qty + '" id="update_qty_' + id + '"/> </td></tr>';
-            out = out + '<tr><td>Total</td><td><span id="update_total_' + id + '">' + row.total + '</span></td></tr>';
+            out = out + '<tr><td>Total</td><td><span id="update_total_' + id + '">' + parseInt(row.total) + '</span></td></tr>';
             out = out + '<tr><td>Cheque No</td><td><input type="text" value="' + row.cheque + '" id="update_cheque_' + id + '"/> </td></tr>';
             out = out + '<tr><td colspan="2"><a class="ui-btn ui-corner-all" onclick="updatePurchase(' + id + ')">Update Purchase</a></td></tr>';
             return false;
@@ -760,6 +782,7 @@ function calcBalance() {
 function sendCollectionDetails() {
     var customer = $("#customer_list_collection").val();
     if (customer != "") {
+        $("#collection .ui-content a").addClass("remove-item");
         $("#collection_spinner").append(loading);
         var data = {
             employee_id: getVal(config.user_id),
@@ -773,11 +796,13 @@ function sendCollectionDetails() {
             cache: false,
             success: function (data) {
                 $("#collection_spinner").empty();
+                $("#collection .ui-content a").removeClass("remove-item");
                 if (data.error == false) {
                     $("#collection_popup .ui-content a").removeAttr("href");
                     $("#collection_popup .ui-content a").attr("data-rel", "back");
                     $("#collection_popup_text").html(data.message);
                     $("#collection_popup").popup("open");
+                    loadCustomerPaymentDetails();
                 } else {
                     $("#collection_popup .ui-content a").removeAttr("href");
                     $("#collection_popup .ui-content a").attr("data-rel", "back");
@@ -786,6 +811,7 @@ function sendCollectionDetails() {
                 }
             },
             error: function (request, status, error) {
+                $("#collection .ui-content a").removeClass("remove-item");
                 $("#collection_spinner").empty();
                 $("#collection_popup .ui-content a").removeAttr("href");
                 $("#collection_popup .ui-content a").attr("data-rel", "back");
@@ -808,26 +834,29 @@ function sendCollectionDetails() {
 function recordExpense() {
     var reason = $("#expense_type").val();
     var amt = $("#expense_amt").val();
-    $("#expense_spinner").empty();
-    $("#expense_spinner").append(loading);
     var data = {
         employee_id: getVal(config.user_id),
         reason: reason,
         amount: amt
     };
     if (amt != "") {
+        $("#expense .ui-content a").addClass("remove-item");
+        $("#expense_spinner").empty();
+        $("#expense_spinner").append(loading);
         $.ajax({
             type: "POST",
             url: config.api_url + "module=admin&action=post_expenses",
             data: data,
             cache: false,
             success: function (data) {
+                $("#expense .ui-content a").removeClass("remove-item");
                 $("#expense_spinner").empty();
                 if (data.error == false) {
                     $("#expense_popup .ui-content a").removeAttr("href");
                     $("#expense_popup .ui-content a").attr("data-rel", "back");
                     $("#expense_popup_text").html(data.message);
                     $("#expense_popup").popup("open");
+                    cancelExpense();
                 } else {
                     $("#expense_popup .ui-content a").removeAttr("href");
                     $("#expense_popup .ui-content a").attr("data-rel", "back");
@@ -836,6 +865,7 @@ function recordExpense() {
                 }
             },
             error: function (request, status, error) {
+                $("#expense .ui-content a").removeClass("remove-item");
                 $("#expense_spinner").empty();
                 $("#expense_popup .ui-content a").removeAttr("href");
                 $("#expense_popup .ui-content a").attr("data-rel", "back");
@@ -843,5 +873,15 @@ function recordExpense() {
                 $("#expense_popup").popup("open");
             }
         });
+    } else {
+        $("#expense_popup .ui-content a").removeAttr("href");
+        $("#expense_popup .ui-content a").attr("data-rel", "back");
+        $("#expense_popup_text").html("Please enter an amount");
+        $("#expense_popup").popup("open");
     }
+}
+
+function cancelExpense() {
+    $("#expense_type").val("");
+    $("#expense_amt").val("");
 }
