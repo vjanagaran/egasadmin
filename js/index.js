@@ -21,6 +21,7 @@ var router = new $.mobile.Router([{
         "#loading": {handler: "loadingPage", events: "bs"},
         "#register_one": {handler: "registerStepOnePage", events: "bs"},
         "#verify": {handler: "verifyPage", events: "bs"},
+        "#stock": {handler: "stockPage", events: "bs"},
         "#supplier": {handler: "supplierPage", events: "bs"},
         "#purchase": {handler: "purchasePage", events: "bs"},
         "#purchase_list": {handler: "purchaseListPage", events: "bs"},
@@ -45,6 +46,10 @@ var router = new $.mobile.Router([{
                 if (is_mobile) {
                     window.analytics.trackView('Verification Page');
                 }
+            },
+            stockPage: function (type, match, ui) {
+                log("Stock Page", 3);
+                loadStockDetails();
             },
             supplierPage: function (type, match, ui) {
                 log("Supplier Page", 3);
@@ -318,6 +323,7 @@ function resend() {
 
 function loadCustomerPriceDetails() {
     customer_price_details = [];
+    $("#supplier .ui-content table").addClass("remove-item");
     $("#supplier_spinner").append(loading);
     $("#customer_list_supplier").empty();
     $("#cyl_price").html(0);
@@ -331,6 +337,7 @@ function loadCustomerPriceDetails() {
         dataType: "json",
         cache: false,
         success: function (rs) {
+            $("#supplier .ui-content table").removeClass("remove-item");
             if (rs.error == false) {
                 $.each(rs.data, function (cusindex, cusrow) {
                     options = options + "<option value='" + cusrow.customer_id + "'>" + cusrow.customer_name + "</option>";
@@ -352,6 +359,7 @@ function loadCustomerPriceDetails() {
             }
         },
         error: function (request, status, error) {
+            $("#supplier .ui-content table").removeClass("remove-item");
             $("#supplier_spinner").empty();
             $("#supplier_popup .ui-content a").removeAttr("href");
             $("#supplier_popup .ui-content a").attr("data-rel", "back");
@@ -379,7 +387,6 @@ function setPrice() {
                     return false;
                 }
             });
-            return false;
         }
     });
     tax_amt = price * qty * tax / 100;
@@ -405,7 +412,6 @@ function calcTotal() {
                             return false;
                         }
                     });
-                    return false;
                 }
             });
             var tax_amt = cyls * price * tax / 100;
@@ -433,7 +439,6 @@ function sendSupplyDetails() {
                 }
             });
         }
-        return false;
     });
     if (customer != "" && $("#full_cyl").val() > 0) {
         if (received_empty <= (empties + supplied_full)) {
@@ -538,6 +543,38 @@ function sendSupplyDetails() {
 
 /**********   Purchase List Page functions ***/
 
+function loadStockDetails() {
+    $("#stock_details").empty();
+    $("#stock_details").append(loading);
+    var out = '<table><tbody>';
+    $.ajax({
+        type: "GET",
+        url: config.api_url + "module=admin&action=stock_list",
+        dataType: 'json',
+        cache: false,
+        success: function (data) {
+            if (data.error == false) {
+                $("#stock_details").empty();
+                out = out + '<tr><td>Product</td><td>' + data.data.name + '</td></tr>';
+                out = out + '<tr><td>Stock</td><td>' + data.data.purchase_stock + '</td></tr>';
+                out = out + '<tr><td>Sale Stock</td><td>' + data.data.supply_stock + '</td></tr>';
+                out = out + '<tr><td>Balance Stock</td><td>' + data.data.pending_stock + '</td></tr>';
+                $(out).appendTo("#stock_details").enhanceWithin();
+            } else {
+                $("#stock_details").empty();
+                $("#stock_details").append(data.message);
+            }
+        },
+        error: function (request, status, error) {
+            $("#stock_details").empty();
+            $("#stock_details").append("Process failed please try again......");
+        }
+    });
+}
+
+
+/**********   Purchase List Page functions ***/
+
 function showPurchaseList() {
     purchased_items = [];
     $("#purchase_list_items").empty();
@@ -553,7 +590,7 @@ function showPurchaseList() {
                 $("#purchase_list_items").empty();
                 $.each(data.data, function (index, row) {
                     purchased_items.push({id: row.id, supplier_name: row.supplier_name, price: row.price, qty: row.quantity, date: row.date, total: row.total_amount, item_name: row.item_name, cheque: row.chq_no});
-                    out = out + '<li><a class="ui-btn ui-btn-corner-all" href="#view_purchased_item?id=' + row.id + '">#' + row.id + '. on ' + $.format.date(row.date, "dd-MMM-yy") + ' value of ' + parseInt(row.total_amount) + '</a></li>';
+                    out = out + '<li><a class="ui-btn ui-btn-corner-all" href="#view_purchased_item?id=' + row.id + '">#' + row.id + '. on ' + $.format.date(row.date, "dd-MMM-yy") + ' value of &#8377; ' + parseInt(row.total_amount) + '</a></li>';
                 });
                 out = out + '</ul></div>';
                 $(out).appendTo("#purchase_list_items").enhanceWithin();
@@ -579,9 +616,9 @@ function loadPurchasedItem(id) {
         if (id == row.id) {
             out = out + '<tr><td>Employee Name</td><td>' + row.supplier_name + '</td></tr>';
             out = out + '<tr><td>Net Weight</td><td>' + row.item_name + '</td></tr>';
-            out = out + '<tr><td>Rate</td><td><input type="text" value="' + parseInt(row.price) + '" id="update_price_' + id + '"/> </td></tr>';
+            out = out + '<tr><td>Rate &#8377;</td><td><input type="text" value="' + parseInt(row.price) + '" id="update_price_' + id + '"/> </td></tr>';
             out = out + '<tr><td>Quantity</td><td><input type="text" value="' + row.qty + '" id="update_qty_' + id + '"/> </td></tr>';
-            out = out + '<tr><td>Total</td><td><span id="update_total_' + id + '">' + parseInt(row.total) + '</span></td></tr>';
+            out = out + '<tr><td>Total &#8377;</td><td><span id="update_total_' + id + '">' + parseInt(row.total) + '</span></td></tr>';
             out = out + '<tr><td>Cheque No</td><td><input type="text" value="' + row.cheque + '" id="update_cheque_' + id + '"/> </td></tr>';
             out = out + '<tr><td colspan="2"><a class="ui-btn ui-corner-all" onclick="updatePurchase(' + id + ')">Update Purchase</a></td></tr>';
             return false;
@@ -677,6 +714,7 @@ function resetPurchase() {
 
 function showSupplierList() {
     supplier_details = [];
+    $("#purchase .ui-content table").addClass("remove-item");
     $("#employee_list").empty();
     $("#purchase_spinner").empty();
     $("#purchase_spinner").append(loading);
@@ -687,6 +725,7 @@ function showSupplierList() {
         dataType: "json",
         cache: false,
         success: function (data) {
+            $("#purchase .ui-content table").removeClass("remove-item");
             $("#purchase_spinner").empty();
             if (data.error == false) {
                 $.each(data.data, function (index, row) {
@@ -697,6 +736,7 @@ function showSupplierList() {
             }
         },
         error: function (request, status, error) {
+            $("#purchase .ui-content table").removeClass("remove-item");
             $("#purchase_spinner").empty();
             $("#purchase_popup .ui-content a").removeAttr("href");
             $("#purchase_popup .ui-content a").attr("data-rel", "back");
@@ -758,7 +798,7 @@ function submitPurchase() {
         var supplier_id = $("#employee_list").val();
         var data = {
             supplier_id: supplier_id,
-            item_id: $("#net_weight").val(),
+            item_id: 3, //$("#net_weight").val(),
             rate: $("#rate").val(),
             quantity: $("#qty").val(),
             total_amount: $("#purchase_total").html(),
@@ -803,6 +843,7 @@ function submitPurchase() {
 
 function loadCustomerPaymentDetails() {
     customer_payment_details = [];
+    $("#collection .ui-content table").addClass("remove-item");
     $("#collection_spinner").append(loading);
     $("#customer_list_collection").empty();
     $("#empty_cyls").html(0);
@@ -817,6 +858,7 @@ function loadCustomerPaymentDetails() {
         dataType: "json",
         cache: false,
         success: function (rs) {
+            $("#collection .ui-content table").removeClass("remove-item");
             if (rs.error == false) {
                 $.each(rs.data, function (cusindex, cusrow) {
                     options = options + "<option value='" + cusrow.id + "'>" + cusrow.name + "</option>";
@@ -830,6 +872,7 @@ function loadCustomerPaymentDetails() {
             }
         },
         error: function (request, status, error) {
+            $("#collection .ui-content table").removeClass("remove-item");
             $("#collection_spinner").empty();
             $("#collection_popup .ui-content a").removeAttr("href");
             $("#collection_popup .ui-content a").attr("data-rel", "back");
@@ -924,7 +967,7 @@ function sendCollectionDetails() {
         $("#collection_spinner").empty();
         $("#collection_popup .ui-content a").removeAttr("href");
         $("#collection_popup .ui-content a").attr("data-rel", "back");
-        $("#collection_popup_text").html("Please select the customer name");
+        $("#collection_popup_text").html("Please enter amt or select customer");
         $("#collection_popup").popup("open");
     }
 }
