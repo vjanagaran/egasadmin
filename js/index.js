@@ -23,6 +23,7 @@ var router = new $.mobile.Router([{
         "#verify": {handler: "verifyPage", events: "bs"},
         "#stock": {handler: "stockPage", events: "bs"},
         "#supplier": {handler: "supplierPage", events: "bs"},
+        "#list_expenses": {handler: "listexpensesPage", events: "bs"},
         "#purchase": {handler: "purchasePage", events: "bs"},
         "#purchase_list": {handler: "purchaseListPage", events: "bs"},
         "#view_purchased_item": {handler: "viewpurchaseditemPage", events: "bs"},
@@ -55,6 +56,10 @@ var router = new $.mobile.Router([{
                 log("Supplier Page", 3);
                 calcTotal();
                 loadCustomerPriceDetails();
+            },
+            listexpensesPage: function (type, match, ui) {
+                log("List Expenses Page", 3);
+                listExpenses();
             },
             viewpurchaseditemPage: function (type, match, ui) {
                 log("View Ordered Items page", 3);
@@ -970,6 +975,37 @@ function sendCollectionDetails() {
         $("#collection_popup_text").html("Please enter amt or select customer");
         $("#collection_popup").popup("open");
     }
+}
+
+
+/**********   List Expense Page functions ***/
+
+function listExpenses() {
+    $("#expenses_details").empty();
+    $("#expenses_details").append(loading);
+    var out = '<div><ul data-role="listview" data-inset="true" data-theme="a">';
+    $.ajax({
+        type: "GET",
+        url: config.api_url + "module=admin&action=list_expenses?id=" + getVal(config.user_id),
+        dataType: "json",
+        cache: false,
+        success: function (data) {
+            if (rs.error == false) {
+                $("#expenses_details").empty();
+                $.each(data.data, function (index, row) {
+                    out = out + '<li><a class="ui-btn ui-btn-corner-all">#' + row.id + '. on ' + $.format.date(row.date, "dd-MMM-yy") + ' value of &#8377; ' + parseInt(row.total_amount) + '</a></li>';
+                });
+                $(out).appendTo("#expenses_details").enhanceWithin();
+            } else {
+                $("#expenses_details").empty();
+                $("#expenses_details").append(data.message);
+            }
+        },
+        error: function (request, status, error) {
+            $("#expenses_details").empty();
+            $("#expenses_details").append("Loading failed please try again......");
+        }
+    });
 }
 
 
