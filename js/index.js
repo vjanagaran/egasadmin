@@ -48,8 +48,8 @@ var router = new $.mobile.Router([{
             },
             supplierPage: function (type, match, ui) {
                 log("Supplier Page", 3);
-                loadCustomerPriceDetails();
                 calcTotal();
+                loadCustomerPriceDetails();
             },
             viewpurchaseditemPage: function (type, match, ui) {
                 log("View Ordered Items page", 3);
@@ -68,8 +68,8 @@ var router = new $.mobile.Router([{
             },
             collectionPage: function (type, match, ui) {
                 log("Collection Page", 3);
-                loadCustomerPaymentDetails();
                 calcBalance();
+                loadCustomerPaymentDetails();
             }
         }, {
     ajaxApp: true,
@@ -346,6 +346,9 @@ function loadCustomerPriceDetails() {
                 });
                 $("#customer_list_supplier").append(options);
                 $("#supplier_spinner").empty();
+            } else {
+                $("#customer_list_supplier").append("<option value=''>-- No customers --</option>");
+                $("#supplier_spinner").empty();
             }
         },
         error: function (request, status, error) {
@@ -364,7 +367,7 @@ function setPrice() {
     var grand_total = "";
     var tax_amt = "";
     var price = "";
-    var qty = 1;
+    var qty = 0;
     var val = $("#customer_list_supplier").val();
     $.each(customer_price_details, function (index, row) {
         if (row.id == val) {
@@ -381,7 +384,7 @@ function setPrice() {
     });
     tax_amt = price * qty * tax / 100;
     grand_total = tax_amt + price * qty;
-    $("#full_cyl").val(1);
+    $("#full_cyl").val(0);
     $("#empty_cyl").val(0);
     $("#cost").html(grand_total);
 }
@@ -416,7 +419,7 @@ function calcTotal() {
 
 function sendSupplyDetails() {
     var customer = $("#customer_list_supplier").val();
-    if (customer != "") {
+    if (customer != "" && $("#full_cyl").val() > 0) {
         $("#supplier .ui-content a").addClass("remove-item");
         $("#supplier_spinner").append(loading);
         var tax = "";
@@ -440,6 +443,56 @@ function sendSupplyDetails() {
         $.ajax({
             type: "POST",
             url: config.api_url + "module=admin&action=delivery",
+            data: data,
+            cache: false,
+            success: function (data) {
+                $("#supplier .ui-content a").removeClass("remove-item");
+                $("#supplier_spinner").empty();
+                if (data.error == false) {
+                    $("#supplier_popup .ui-content a").removeAttr("href");
+                    $("#supplier_popup .ui-content a").attr("data-rel", "back");
+                    $("#supplier_popup_text").html(data.message);
+                    $("#supplier_popup").popup("open");
+                    loadCustomerPriceDetails();
+                } else {
+                    $("#supplier_popup .ui-content a").removeAttr("href");
+                    $("#supplier_popup .ui-content a").attr("data-rel", "back");
+                    $("#supplier_popup_text").html(data.message);
+                    $("#supplier_popup").popup("open");
+                }
+            },
+            error: function (request, status, error) {
+                $("#supplier .ui-content a").removeClass("remove-item");
+                $("#supplier_spinner").empty();
+                $("#supplier_popup .ui-content a").removeAttr("href");
+                $("#supplier_popup .ui-content a").attr("data-rel", "back");
+                $("#supplier_popup_text").html("Loading faild please try after sometimes later...");
+                $("#supplier_popup").popup("open");
+            }
+        });
+    } else if (customer != "" && ($("#full_cyl").val() == "" || $("#full_cyl").val() <= 0) && $("#empty_cyl").val() != "") {
+        $("#supplier .ui-content a").addClass("remove-item");
+        $("#supplier_spinner").append(loading);
+        var tax = "";
+        $.each(customer_price_details, function (cusindex, cusrow) {
+            if (cusrow.id == customer) {
+                $.each(cusrow.items, function (itemindex, itemrow) {
+                    if (itemrow.id == 3) {
+                        tax = itemrow.tax;
+                        return false;
+                    }
+                });
+            }
+            return false;
+        });
+        var data = {
+            employee_id: getVal(config.user_id),
+            customer_id: customer,
+            empty_cylinder: $("#empty_cyl").val()
+        };
+        $.ajax({
+            type: "POST",
+            url: config.api_url + "module=admin&action=collection_empties",
             data: data,
             cache: false,
             success: function (data) {
@@ -592,12 +645,14 @@ function updatePurchase(id) {
 }
 
 
-/**********   Purchase Details Page functions ***/
+/**********   Purchase Page functions ***/
 
 function resetPurchase() {
     $("#purchase_spinner").empty();
+    $("#cheque_no").val("");
     $("#qty").val(0);
     $("#rate").val(0);
+    $("#purchase_total").html("");
     $("#qty").keyup(function (e) {
         var rate = $("#rate").val();
         if (rate != 0) {
@@ -658,12 +713,43 @@ function getSupplierCode() {
     }
 }
 
-function submitPurchase() {
+function validatePurchase() {
+    $("#purchase_spinner").empty();
+    $("#purchase_popup .ui-content a").removeAttr("href");
+    $("#purchase_popup .ui-content a").attr("data-rel", "back");
     var supplier_id = $("#employee_list").val();
-    if (supplier_id != "") {
+    var rate = $("#rate").val();
+    var qty = $("#qty").val();
+    var cheque = $("#cheque_no").val();
+    if (supplier_id == "") {
+        $("#purchase_popup_text").html("Select a supplier");
+        $("#purchase_popup").popup("open");
+        return false;
+    }
+    if (rate <= 0) {
+        $("#purchase_popup_text").html("Amount is invalid");
+        $("#purchase_popup").popup("open");
+        return false;
+    }
+    if (qty <= 0) {
+        $("#purchase_popup_text").html("Quantity is invalid");
+        $("#purchase_popup").popup("open");
+        return false;
+    }
+    if (cheque == "") {
+        $("#purchase_popup_text").html("Enter cheque no");
+        $("#purchase_popup").popup("open");
+        return false;
+    }
+    return true;
+}
+
+function submitPurchase() {
+    if (validatePurchase()) {
         $("#purchase .ui-content a").addClass("remove-item");
         $("#purchase_spinner").empty();
         $("#purchase_spinner").append(loading);
+        var supplier_id = $("#employee_list").val();
         var data = {
             supplier_id: supplier_id,
             item_id: $("#net_weight").val(),
@@ -685,6 +771,7 @@ function submitPurchase() {
                     $("#purchase_popup .ui-content a").attr("data-rel", "back");
                     $("#purchase_popup_text").html(data.message);
                     $("#purchase_popup").popup("open");
+                    resetPurchase();
                 } else {
                     $("#purchase_spinner").empty();
                     $("#purchase_popup .ui-content a").removeAttr("href");
@@ -702,12 +789,6 @@ function submitPurchase() {
                 $("#purchase_popup").popup("open");
             }
         });
-    } else {
-        $("#purchase_spinner").empty();
-        $("#purchase_popup .ui-content a").removeAttr("href");
-        $("#purchase_popup .ui-content a").attr("data-rel", "back");
-        $("#purchase_popup_text").html("Select a supplier");
-        $("#purchase_popup").popup("open");
     }
 }
 
@@ -723,7 +804,7 @@ function loadCustomerPaymentDetails() {
     $("#curr_bal").val("");
     $("#received_pay").val("");
     $("#total_bal").html(0);
-    var options = "<option value=''>--Select customer name--</option>"
+    var options = "<option value=''>--Select customer name--</option>";
     $.ajax({
         type: "GET",
         url: config.api_url + "module=admin&action=collection_customer_list",
@@ -736,6 +817,9 @@ function loadCustomerPaymentDetails() {
                     customer_payment_details.push({id: cusrow.id, name: cusrow.name, balance: [{pending_cyls: cusrow.balance.pending_cylinder, pending_amt: cusrow.balance.pending_amount}]});
                 });
                 $("#customer_list_collection").append(options);
+                $("#collection_spinner").empty();
+            } else {
+                $("#customer_list_collection").append("<option value=''>--No customers--</option>");
                 $("#collection_spinner").empty();
             }
         },
@@ -768,10 +852,12 @@ function setTransactions() {
 function calcBalance() {
     $("#collection_spinner").empty();
     $("#received_pay").keyup(function (e) {
-        var balance = $("#prev_bal").html();
-        var received = $(this).val();
-        if (received != 0) {
+        var balance = parseInt($("#prev_bal").html());
+        var received = parseInt($(this).val());
+        if (received != 0 && received <= balance) {
             $("#total_bal").html(balance - received);
+        } else if (received != 0 && received > balance) {
+            $("#total_bal").html("Received amt is grater than balance amt");
         } else {
             $("#total_bal").html(balance);
         }
@@ -781,7 +867,9 @@ function calcBalance() {
 
 function sendCollectionDetails() {
     var customer = $("#customer_list_collection").val();
-    if (customer != "") {
+    var balance = parseInt($("#prev_bal").html());
+    var received = parseInt($("#received_pay").val());
+    if (customer != "" && received <= balance) {
         $("#collection .ui-content a").addClass("remove-item");
         $("#collection_spinner").append(loading);
         var data = {
@@ -808,6 +896,7 @@ function sendCollectionDetails() {
                     $("#collection_popup .ui-content a").attr("data-rel", "back");
                     $("#collection_popup_text").html(data.message);
                     $("#collection_popup").popup("open");
+                    loadCustomerPaymentDetails();
                 }
             },
             error: function (request, status, error) {
@@ -819,6 +908,12 @@ function sendCollectionDetails() {
                 $("#collection_popup").popup("open");
             }
         });
+    } else if (customer != "" && received > balance) {
+        $("#collection_spinner").empty();
+        $("#collection_popup .ui-content a").removeAttr("href");
+        $("#collection_popup .ui-content a").attr("data-rel", "back");
+        $("#collection_popup_text").html("Received amt is grater than balance amt");
+        $("#collection_popup").popup("open");
     } else {
         $("#collection_spinner").empty();
         $("#collection_popup .ui-content a").removeAttr("href");
