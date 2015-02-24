@@ -334,7 +334,7 @@ function loadCustomerPriceDetails() {
             if (rs.error == false) {
                 $.each(rs.data, function (cusindex, cusrow) {
                     options = options + "<option value='" + cusrow.customer_id + "'>" + cusrow.customer_name + "</option>";
-                    customer_price_details.push({name: cusrow.customer_name, id: cusrow.customer_id, items: []});
+                    customer_price_details.push({name: cusrow.customer_name, id: cusrow.customer_id, empties: cusrow.pending_cylinder, items: []});
                     $.each(customer_price_details, function (index, row) {
                         if (cusrow.customer_id == row.id) {
                             $.each(cusrow.items, function (itemindex, itemrow) {
@@ -419,107 +419,113 @@ function calcTotal() {
 
 function sendSupplyDetails() {
     var customer = $("#customer_list_supplier").val();
+    var tax = 0;
+    var empties = 0;
+    var received_empty = parseInt($("#empty_cyl").val());
+    var supplied_full = parseInt($("#full_cyl").val());
+    $.each(customer_price_details, function (cusindex, cusrow) {
+        if (cusrow.id == customer) {
+            empties = cusrow.empties;
+            $.each(cusrow.items, function (itemindex, itemrow) {
+                if (itemrow.id == 3) {
+                    tax = itemrow.tax;
+                    return false;
+                }
+            });
+        }
+        return false;
+    });
     if (customer != "" && $("#full_cyl").val() > 0) {
-        $("#supplier .ui-content a").addClass("remove-item");
-        $("#supplier_spinner").append(loading);
-        var tax = "";
-        $.each(customer_price_details, function (cusindex, cusrow) {
-            if (cusrow.id == customer) {
-                $.each(cusrow.items, function (itemindex, itemrow) {
-                    if (itemrow.id == 3) {
-                        tax = itemrow.tax;
-                        return false;
+        if (received_empty <= (empties + supplied_full)) {
+            $("#supplier .ui-content a").addClass("remove-item");
+            $("#supplier_spinner").append(loading);
+            var data = {
+                employee_id: getVal(config.user_id),
+                customer_id: customer,
+                items: [{item_id: 3, quantity: $("#full_cyl").val(), tax: tax, received_cylinder: $("#empty_cyl").val()}],
+                supply_amount: $("#cost").html()
+            };
+            $.ajax({
+                type: "POST",
+                url: config.api_url + "module=admin&action=delivery",
+                data: data,
+                cache: false,
+                success: function (data) {
+                    $("#supplier .ui-content a").removeClass("remove-item");
+                    $("#supplier_spinner").empty();
+                    if (data.error == false) {
+                        $("#supplier_popup .ui-content a").removeAttr("href");
+                        $("#supplier_popup .ui-content a").attr("data-rel", "back");
+                        $("#supplier_popup_text").html(data.message);
+                        $("#supplier_popup").popup("open");
+                        loadCustomerPriceDetails();
+                    } else {
+                        $("#supplier_popup .ui-content a").removeAttr("href");
+                        $("#supplier_popup .ui-content a").attr("data-rel", "back");
+                        $("#supplier_popup_text").html(data.message);
+                        $("#supplier_popup").popup("open");
                     }
-                });
-            }
-            return false;
-        });
-        var data = {
-            employee_id: getVal(config.user_id),
-            customer_id: customer,
-            items: [{item_id: 3, quantity: $("#full_cyl").val(), tax: tax, received_cylinder: $("#empty_cyl").val()}],
-            supply_amount: $("#cost").html()
-        };
-        $.ajax({
-            type: "POST",
-            url: config.api_url + "module=admin&action=delivery",
-            data: data,
-            cache: false,
-            success: function (data) {
-                $("#supplier .ui-content a").removeClass("remove-item");
-                $("#supplier_spinner").empty();
-                if (data.error == false) {
+                },
+                error: function (request, status, error) {
+                    $("#supplier .ui-content a").removeClass("remove-item");
+                    $("#supplier_spinner").empty();
                     $("#supplier_popup .ui-content a").removeAttr("href");
                     $("#supplier_popup .ui-content a").attr("data-rel", "back");
-                    $("#supplier_popup_text").html(data.message);
-                    $("#supplier_popup").popup("open");
-                    loadCustomerPriceDetails();
-                } else {
-                    $("#supplier_popup .ui-content a").removeAttr("href");
-                    $("#supplier_popup .ui-content a").attr("data-rel", "back");
-                    $("#supplier_popup_text").html(data.message);
+                    $("#supplier_popup_text").html("Loading faild please try after sometimes later...");
                     $("#supplier_popup").popup("open");
                 }
-            },
-            error: function (request, status, error) {
-                $("#supplier .ui-content a").removeClass("remove-item");
-                $("#supplier_spinner").empty();
-                $("#supplier_popup .ui-content a").removeAttr("href");
-                $("#supplier_popup .ui-content a").attr("data-rel", "back");
-                $("#supplier_popup_text").html("Loading faild please try after sometimes later...");
-                $("#supplier_popup").popup("open");
-            }
-        });
+            });
+        } else {
+            $("#supplier_popup .ui-content a").removeAttr("href");
+            $("#supplier_popup .ui-content a").attr("data-rel", "back");
+            $("#supplier_popup_text").html("Please confirm received empty cylinders");
+            $("#supplier_popup").popup("open");
+        }
     } else if (customer != "" && ($("#full_cyl").val() == "" || $("#full_cyl").val() <= 0) && $("#empty_cyl").val() != "") {
-        $("#supplier .ui-content a").addClass("remove-item");
-        $("#supplier_spinner").append(loading);
-        var tax = "";
-        $.each(customer_price_details, function (cusindex, cusrow) {
-            if (cusrow.id == customer) {
-                $.each(cusrow.items, function (itemindex, itemrow) {
-                    if (itemrow.id == 3) {
-                        tax = itemrow.tax;
-                        return false;
+        if (received_empty <= empties) {
+            $("#supplier .ui-content a").addClass("remove-item");
+            $("#supplier_spinner").append(loading);
+            var data = {
+                employee_id: getVal(config.user_id),
+                customer_id: customer,
+                empty_cylinder: $("#empty_cyl").val()
+            };
+            $.ajax({
+                type: "POST",
+                url: config.api_url + "module=admin&action=collection_empties",
+                data: data,
+                cache: false,
+                success: function (data) {
+                    $("#supplier .ui-content a").removeClass("remove-item");
+                    $("#supplier_spinner").empty();
+                    if (data.error == false) {
+                        $("#supplier_popup .ui-content a").removeAttr("href");
+                        $("#supplier_popup .ui-content a").attr("data-rel", "back");
+                        $("#supplier_popup_text").html(data.message);
+                        $("#supplier_popup").popup("open");
+                        loadCustomerPriceDetails();
+                    } else {
+                        $("#supplier_popup .ui-content a").removeAttr("href");
+                        $("#supplier_popup .ui-content a").attr("data-rel", "back");
+                        $("#supplier_popup_text").html(data.message);
+                        $("#supplier_popup").popup("open");
                     }
-                });
-            }
-            return false;
-        });
-        var data = {
-            employee_id: getVal(config.user_id),
-            customer_id: customer,
-            empty_cylinder: $("#empty_cyl").val()
-        };
-        $.ajax({
-            type: "POST",
-            url: config.api_url + "module=admin&action=collection_empties",
-            data: data,
-            cache: false,
-            success: function (data) {
-                $("#supplier .ui-content a").removeClass("remove-item");
-                $("#supplier_spinner").empty();
-                if (data.error == false) {
+                },
+                error: function (request, status, error) {
+                    $("#supplier .ui-content a").removeClass("remove-item");
+                    $("#supplier_spinner").empty();
                     $("#supplier_popup .ui-content a").removeAttr("href");
                     $("#supplier_popup .ui-content a").attr("data-rel", "back");
-                    $("#supplier_popup_text").html(data.message);
-                    $("#supplier_popup").popup("open");
-                    loadCustomerPriceDetails();
-                } else {
-                    $("#supplier_popup .ui-content a").removeAttr("href");
-                    $("#supplier_popup .ui-content a").attr("data-rel", "back");
-                    $("#supplier_popup_text").html(data.message);
+                    $("#supplier_popup_text").html("Loading faild please try after sometimes later...");
                     $("#supplier_popup").popup("open");
                 }
-            },
-            error: function (request, status, error) {
-                $("#supplier .ui-content a").removeClass("remove-item");
-                $("#supplier_spinner").empty();
-                $("#supplier_popup .ui-content a").removeAttr("href");
-                $("#supplier_popup .ui-content a").attr("data-rel", "back");
-                $("#supplier_popup_text").html("Loading faild please try after sometimes later...");
-                $("#supplier_popup").popup("open");
-            }
-        });
+            });
+        } else {
+            $("#supplier_popup .ui-content a").removeAttr("href");
+            $("#supplier_popup .ui-content a").attr("data-rel", "back");
+            $("#supplier_popup_text").html("Please confirm received empty cylinders");
+            $("#supplier_popup").popup("open");
+        }
     } else {
         $("#supplier_spinner").empty();
         $("#supplier_popup .ui-content a").removeAttr("href");
