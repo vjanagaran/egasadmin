@@ -481,6 +481,7 @@ function sendSupplyDetails() {
                         $("#supplier_popup .ui-content a").attr("data-rel", "back");
                         $("#supplier_popup_text").html(data.message);
                         $("#supplier_popup").popup("open");
+                        loadCustomerPriceDetails();
                     }
                 },
                 error: function (request, status, error) {
@@ -526,6 +527,7 @@ function sendSupplyDetails() {
                         $("#supplier_popup .ui-content a").attr("data-rel", "back");
                         $("#supplier_popup_text").html(data.message);
                         $("#supplier_popup").popup("open");
+                        loadCustomerPriceDetails();
                     }
                 },
                 error: function (request, status, error) {
