@@ -1093,6 +1093,5 @@ function recordExpense() {
 }
 
 function cancelExpense() {
-    $("#expense_type").val("");
     $("#expense_amt").val("");
 }
