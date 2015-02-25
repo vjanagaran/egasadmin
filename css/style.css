@@ -110,7 +110,7 @@ div[data-role="header"] .ui-title{
     height: auto;
 }
 
-#supplier table, #collection table, #expense table, #purchase table, #view_purchased_item table, #stock table {
+#supplier table, #collection table, #expense table, #purchase table, #view_purchased_item table, #stock table, #expense_detail table {
     width: 100%;
 }
 

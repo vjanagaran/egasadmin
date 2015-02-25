@@ -27,6 +27,7 @@ var router = new $.mobile.Router([{
         "#purchase": {handler: "purchasePage", events: "bs"},
         "#purchase_list": {handler: "purchaseListPage", events: "bs"},
         "#view_purchased_item": {handler: "viewpurchaseditemPage", events: "bs"},
+        "#expense_detail": {handler: "expensedetailPage", events: "bs"},
         "#collection": {handler: "collectionPage", events: "bs"}
     }],
         {
@@ -61,8 +62,13 @@ var router = new $.mobile.Router([{
                 log("List Expenses Page", 3);
                 listExpenses();
             },
+            expensedetailPage: function (type, match, ui) {
+                log("Expense Detail Page", 3);
+                var params = router.getParams(match[1]);
+                showExpenseDetail(params.id);
+            },
             viewpurchaseditemPage: function (type, match, ui) {
-                log("View Ordered Items page", 3);
+                log("View Ordered Items Page", 3);
                 var params = router.getParams(match[1]);
                 loadPurchasedItem(params.id);
                 calcUpdateTotal(params.id);
@@ -111,6 +117,7 @@ var customer_price_details = [];
 var customer_payment_details = [];
 var supplier_details = [];
 var purchased_items = [];
+var expenses_list = [];
 jQuery.fn.center = function () {
     this.css("position", "fixed");
     this.css("top", ($(window).height() / 2) - (this.outerHeight() / 2));
@@ -614,7 +621,7 @@ function showPurchaseList() {
 function loadPurchasedItem(id) {
     $("#purchased_item_detail").empty();
     $("#purchased_item_spinner").empty();
-    $("#purchased_item_heading").html("Purchased id # " + id);
+    $("#purchased_item_heading").html("Purchased id #" + id);
     var out = "";
     out = out + '<table><tbody>';
     $.each(purchased_items, function (index, row) {
@@ -978,22 +985,46 @@ function sendCollectionDetails() {
 }
 
 
+/**********   Expense Detail Page functions ***/
+
+function showExpenseDetail(id) {
+    $("#show_expense_detail").empty();
+    $("#expense_detail_header").empty();
+    var out = '<table><tbody>';
+    $.each(expenses_list, function (index, row) {
+        if (row.id == id) {
+            $("#expense_detail_header").html("Expense id #" + row.id);
+            out = out + '<tr><td>Reason</td><td>' + row.reason + '</td></tr>';
+            out = out + '<tr><td>Amount</td><td>' + parseInt(row.amt) + '</td></tr>';
+            out = out + '<tr><td>Status</td><td>' + row.status + '</td></tr>';
+            out = out + '<tr><td>Date</td><td>' + $.format.date(row.date, "dd-MMM-yy") + '</td></tr>';
+            return false;
+        }
+    });
+    out = out + '</tbody></table>';
+    $(out).appendTo("#show_expense_detail").enhanceWithin();
+}
+
+
 /**********   List Expense Page functions ***/
 
 function listExpenses() {
+    expenses_list = [];
+    var data = {employee_id: getVal(config.user_id)};
     $("#expenses_details").empty();
     $("#expenses_details").append(loading);
     var out = '<div><ul data-role="listview" data-inset="true" data-theme="a">';
     $.ajax({
-        type: "GET",
-        url: config.api_url + "module=admin&action=list_expenses?id=" + getVal(config.user_id),
-        dataType: "json",
+        type: "POST",
+        url: config.api_url + "module=admin&action=expenses_list",
+        data: data,
         cache: false,
         success: function (data) {
-            if (rs.error == false) {
+            if (data.error == false) {
                 $("#expenses_details").empty();
                 $.each(data.data, function (index, row) {
-                    out = out + '<li><a class="ui-btn ui-btn-corner-all">#' + row.id + '. on ' + $.format.date(row.date, "dd-MMM-yy") + ' value of &#8377; ' + parseInt(row.total_amount) + '</a></li>';
+                    expenses_list.push({id: row.id, reason: row.reason, amt: row.amount, status: row.status, date: row.date});
+                    out = out + '<li><a href="#expense_detail?id=' + row.id + '" class="ui-btn ui-btn-corner-all">#' + row.id + '. on ' + $.format.date(row.date, "dd-MMM-yy") + ' value of &#8377; ' + parseInt(row.amount) + '</a></li>';
                 });
                 $(out).appendTo("#expenses_details").enhanceWithin();
             } else {
