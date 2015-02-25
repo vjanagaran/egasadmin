@@ -939,7 +939,8 @@ function sendCollectionDetails() {
         var data = {
             employee_id: getVal(config.user_id),
             id: customer,
-            amount: $("#received_pay").val()
+            amount: $("#received_pay").val(),
+            item_id: 3
         };
         $.ajax({
             type: "POST",
