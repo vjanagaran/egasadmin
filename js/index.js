@@ -506,7 +506,8 @@ function sendSupplyDetails() {
             var data = {
                 employee_id: getVal(config.user_id),
                 customer_id: customer,
-                empty_cylinder: $("#empty_cyl").val()
+                empty_cylinder: $("#empty_cyl").val(),
+                item_id: 3
             };
             $.ajax({
                 type: "POST",
