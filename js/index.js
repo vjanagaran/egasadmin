@@ -338,7 +338,7 @@ function loadCustomerPriceDetails() {
     $("#supplier .ui-content table").addClass("remove-item");
     $("#supplier_spinner").append(loading);
     $("#customer_list_supplier").empty();
-    $("#cyl_price").html(0);
+    $("#cyl_price").val(0);
     $("#full_cyl").val("");
     $("#empty_cyl").val("");
     $("#cost").html(0);
@@ -394,7 +394,7 @@ function setPrice() {
             $.each(row.items, function (itemind, itemrow) {
                 if (itemrow.id == 3) {
                     price = itemrow.price;
-                    $("#cyl_price").html(itemrow.price);
+                    $("#cyl_price").val(itemrow.price);
                     tax = itemrow.tax;
                     return false;
                 }
@@ -413,8 +413,30 @@ function calcTotal() {
     $("#supplier_spinner").empty();
     $("#full_cyl").keyup(function (e) {
         var cyls = $(this).val();
-        var price = $("#cyl_price").html();
+        var price = $("#cyl_price").val();
         if (cyls != 0) {
+            var id = $("#customer_list_supplier").val();
+            $.each(customer_price_details, function (index, row) {
+                if (row.id == id) {
+                    $.each(row.items, function (itemindex, itemrow) {
+                        if (itemrow.id == 3) {
+                            tax = itemrow.tax;
+                            return false;
+                        }
+                    });
+                }
+            });
+            var tax_amt = cyls * price * tax / 100;
+            var grand_total = cyls * price + tax_amt;
+            $("#cost").html(grand_total);
+        } else {
+            $("#cost").html(0);
+        }
+    });
+    $("#cyl_price").keyup(function (e) {
+        var price = $(this).val();
+        var cyls = $("#full_cyl").val();
+        if (price != 0) {
             var id = $("#customer_list_supplier").val();
             $.each(customer_price_details, function (index, row) {
                 if (row.id == id) {
@@ -459,7 +481,7 @@ function sendSupplyDetails() {
             var data = {
                 employee_id: getVal(config.user_id),
                 customer_id: customer,
-                items: [{item_id: 3, quantity: $("#full_cyl").val(), tax: tax, received_cylinder: $("#empty_cyl").val()}],
+                items: [{item_id: 3, quantity: $("#full_cyl").val(), tax: tax, received_cylinder: $("#empty_cyl").val(), rate: $("#cyl_price").val()}],
                 supply_amount: $("#cost").html()
             };
             $.ajax({
