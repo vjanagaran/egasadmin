@@ -596,7 +596,7 @@ function loadStockDetails() {
                 out = out + '<tr><td>Stock</td><td>' + data.data.purchase_stock + '</td></tr>';
                 out = out + '<tr><td>Sale Stock</td><td>' + data.data.supply_stock + '</td></tr>';
                 out = out + '<tr><td>Balance Stock</td><td>' + data.data.pending_stock + '</td></tr>';
-                out = out + '<tr><td>Balance Stock</td><td>' + data.data.pending_stock + '</td></tr>';
+                out = out + '<tr><td>Empty Received</td><td>' + data.data.recived_cylinders + '</td></tr>';
                 $(out).appendTo("#stock_details").enhanceWithin();
             } else {
                 $("#stock_details").empty();
@@ -791,7 +791,7 @@ function getSupplierCode() {
         $.each(supplier_details, function (index, row) {
             if (id == row.id) {
                 $("#emp_code").html(row.code);
-                $("#rate").val(row.price);
+                $("#rate").val(parseInt(row.price));
                 return false;
             }
         });
