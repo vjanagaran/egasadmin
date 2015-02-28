@@ -578,7 +578,7 @@ function sendSupplyDetails() {
 }
 
 
-/**********   Purchase List Page functions ***/
+/**********   Stock Page functions ***/
 
 function loadStockDetails() {
     $("#stock_details").empty();
@@ -595,6 +595,7 @@ function loadStockDetails() {
                 out = out + '<tr><td>Product</td><td>' + data.data.name + '</td></tr>';
                 out = out + '<tr><td>Stock</td><td>' + data.data.purchase_stock + '</td></tr>';
                 out = out + '<tr><td>Sale Stock</td><td>' + data.data.supply_stock + '</td></tr>';
+                out = out + '<tr><td>Balance Stock</td><td>' + data.data.pending_stock + '</td></tr>';
                 out = out + '<tr><td>Balance Stock</td><td>' + data.data.pending_stock + '</td></tr>';
                 $(out).appendTo("#stock_details").enhanceWithin();
             } else {
@@ -766,7 +767,7 @@ function showSupplierList() {
             $("#purchase_spinner").empty();
             if (data.error == false) {
                 $.each(data.data, function (index, row) {
-                    supplier_details.push({id: row.id, name: row.name, code: row.supplier_no});
+                    supplier_details.push({id: row.id, name: row.name, code: row.supplier_no, price: row.price});
                     options = options + "<option value='" + row.id + "'>" + row.name + "</option>";
                 });
                 $("#employee_list").append(options);
@@ -790,6 +791,7 @@ function getSupplierCode() {
         $.each(supplier_details, function (index, row) {
             if (id == row.id) {
                 $("#emp_code").html(row.code);
+                $("#rate").val(row.price);
                 return false;
             }
         });
