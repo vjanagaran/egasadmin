@@ -895,7 +895,7 @@ function submitPurchase() {
                     $("#purchase_popup .ui-content a").attr("data-rel", "back");
                     $("#purchase_popup_text").html(data.message);
                     $("#purchase_popup").popup("open");
-                    resetPurchase();
+                    showSupplierList();
                 } else {
                     $("#purchase_spinner").empty();
                     $("#purchase_popup .ui-content a").removeAttr("href");
@@ -1172,6 +1172,8 @@ function recordExpense() {
 
 function cancelExpense() {
     $("#expense_amt").val("");
+    $("#expense_type").val("");
+    showExpenseDate();
 }
 
 function showExpenseDate() {
