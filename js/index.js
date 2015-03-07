@@ -343,6 +343,15 @@ function loadCustomerPriceDetails() {
     $("#empty_cyl").val("");
     $("#cost").html(0);
     var options = "<option value=''>--Select customer name--</option>"
+    var date = new Date();
+    var date_options = "<option value=''>--Select date--</option><option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>";
+    var one_day = (60 * 60 * 24 * 1000);
+    $("#supply_date").empty();
+    for (var i = 1; i <= 15; i++) {
+        date_options = date_options + "<option value='" + $.format.date(date - one_day, "dd-MM-yyyy") + "'>" + $.format.date(date - one_day, "dd-MM-yyyy") + "</option>";
+        date = date - one_day;
+    }
+    $("#supply_date").append(date_options);
     $.ajax({
         type: "GET",
         url: config.api_url + "module=admin&action=supply_customer_list",
@@ -463,6 +472,7 @@ function sendSupplyDetails() {
     var empties = 0;
     var received_empty = parseInt($("#empty_cyl").val());
     var supplied_full = parseInt($("#full_cyl").val());
+    var date = $("#supply_date").val();
     $.each(customer_price_details, function (cusindex, cusrow) {
         if (cusrow.id == customer) {
             empties = cusrow.empties;
@@ -482,7 +492,8 @@ function sendSupplyDetails() {
                 employee_id: getVal(config.user_id),
                 customer_id: customer,
                 items: [{item_id: 3, quantity: $("#full_cyl").val(), tax: tax, received_cylinder: $("#empty_cyl").val(), rate: $("#cyl_price").val()}],
-                supply_amount: $("#cost").html()
+                supply_amount: $("#cost").html(),
+                date: date
             };
             $.ajax({
                 type: "POST",
@@ -757,6 +768,15 @@ function showSupplierList() {
     $("#purchase_spinner").empty();
     $("#purchase_spinner").append(loading);
     var options = "<option value=''>--Select Supplier--</option>";
+    $("#purchase_date").empty();
+    var date = new Date();
+    var date_options = "<option value=''>--Select date--</option><option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>";
+    var one_day = (60 * 60 * 24 * 1000);
+    for (var i = 1; i <= 15; i++) {
+        date_options = date_options + "<option value='" + $.format.date(date - one_day, "dd-MM-yyyy") + "'>" + $.format.date(date - one_day, "dd-MM-yyyy") + "</option>";
+        date = date - one_day;
+    }
+    $("#purchase_date").append(date_options);
     $.ajax({
         type: "GET",
         url: config.api_url + "module=admin&action=supplier_list",
@@ -835,13 +855,15 @@ function submitPurchase() {
         $("#purchase_spinner").empty();
         $("#purchase_spinner").append(loading);
         var supplier_id = $("#employee_list").val();
+        var date = $("#purchase_date").val();
         var data = {
             supplier_id: supplier_id,
             item_id: 3, //$("#net_weight").val(),
             rate: $("#rate").val(),
             quantity: $("#qty").val(),
             total_amount: $("#purchase_total").html(),
-            chq_no: $("#cheque_no").val()
+            chq_no: $("#cheque_no").val(),
+            date: date
         };
         $.ajax({
             type: "POST",
@@ -891,6 +913,15 @@ function loadCustomerPaymentDetails() {
     $("#received_pay").val("");
     $("#total_bal").html(0);
     var options = "<option value=''>--Select customer name--</option>";
+    $("#collection_date").empty();
+    var date = new Date();
+    var date_options = "<option value=''>--Select date--</option><option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>";
+    var one_day = (60 * 60 * 24 * 1000);
+    for (var i = 1; i <= 15; i++) {
+        date_options = date_options + "<option value='" + $.format.date(date - one_day, "dd-MM-yyyy") + "'>" + $.format.date(date - one_day, "dd-MM-yyyy") + "</option>";
+        date = date - one_day;
+    }
+    $("#collection_date").append(date_options);
     $.ajax({
         type: "GET",
         url: config.api_url + "module=admin&action=collection_customer_list",
@@ -964,7 +995,8 @@ function sendCollectionDetails() {
             employee_id: getVal(config.user_id),
             id: customer,
             amount: $("#received_pay").val(),
-            item_id: 3
+            item_id: 3,
+            date: $("#collection_date").val()
         };
         $.ajax({
             type: "POST",

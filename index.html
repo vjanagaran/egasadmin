@@ -105,6 +105,7 @@
                     <tbody>
                         <tr><td>Name</td><td><select data-role="none" onchange="getSupplierCode()" name="employee_list" id="employee_list"></select></td></tr>
                         <tr><td>Code</td><td><span id="emp_code"></span></td></tr>
+                        <tr><td>Date</td><td><select data-role="none" name="purchase_date" id="purchase_date"></select></td></tr>
                         <tr><td>Gas Type</td><td><span id="gas_type">Commercial</span></td></tr>
                         <tr><td>Net Weight</td><td><span id="net_weight">Commercial 17Kg</span></td></tr>
                         <tr><td>Rate &#8377;</td><td><input type="text" value="" id="rate" name="rate" /></td></tr>
@@ -201,6 +202,7 @@
                     <tbody>
                         <tr><td>Customer Name</td><td><select data-role="none" name="customer_list_supplier" onchange="setPrice()" id="customer_list_supplier"></select></td></tr>
                         <tr><td>Price &#8377;</td><td><input type="text" value="" id="cyl_price" name="cyl_price" /></td></tr>
+                        <tr><td>Date</td><td><select data-role="none" name="supply_date" id="supply_date"></select></td></tr>
                         <tr><td>Full Cylinder</td><td><input type="text" value="" id="full_cyl" name="full_cyl" /></td></tr>
                         <tr><td>Empty Cylinder</td><td><input type="text" value="" id="empty_cyl" name="empty_cyl" /></td></tr>
                         <tr><td>Total &#8377;<br/><small>*Inclusive all taxes</small></td><td><span id="cost"></span></td></tr>
@@ -261,6 +263,7 @@
                         <tr><td>Customer Name</td><td><select data-role="none" onchange="setTransactions()" id="customer_list_collection"></select></td></tr>
                         <tr><td>Empty Cylinders</td><td><span id="empty_cyls"></span></td></tr>
                         <tr><td>Previous Balance &#8377;</td><td><span id="prev_bal"></span></td></tr>
+                        <tr><td>Date</td><td><select data-role="none" name="collection_date" id="collection_date"></select></td></tr>
                         <tr><td>Payment Received &#8377;</td><td><input type="text" value="" id="received_pay" name="received_pay" /></td></tr>
                         <tr><td>Total Balance &#8377;</td><td><span id="total_bal"></span></td></tr>
                         <tr><td colspan="2"><a class="ui-btn ui-btn-corner-all" onclick="sendCollectionDetails();">Confirm</a></td></tr>
