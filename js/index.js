@@ -28,6 +28,7 @@ var router = new $.mobile.Router([{
         "#purchase_list": {handler: "purchaseListPage", events: "bs"},
         "#view_purchased_item": {handler: "viewpurchaseditemPage", events: "bs"},
         "#expense_detail": {handler: "expensedetailPage", events: "bs"},
+        "#expense": {handler: "expensePage", events: "bs"},
         "#collection": {handler: "collectionPage", events: "bs"}
     }],
         {
@@ -61,6 +62,10 @@ var router = new $.mobile.Router([{
             listexpensesPage: function (type, match, ui) {
                 log("List Expenses Page", 3);
                 listExpenses();
+            },
+            expensePage: function (type, match, ui) {
+                log("Expenses Page", 3);
+                showExpenseDate();
             },
             expensedetailPage: function (type, match, ui) {
                 log("Expense Detail Page", 3);
@@ -1120,7 +1125,8 @@ function recordExpense() {
     var data = {
         employee_id: getVal(config.user_id),
         reason: reason,
-        amount: amt
+        amount: amt,
+        date: $("#expense_date").val()
     };
     if (amt != "") {
         $("#expense .ui-content a").addClass("remove-item");
@@ -1166,4 +1172,16 @@ function recordExpense() {
 
 function cancelExpense() {
     $("#expense_amt").val("");
+}
+
+function showExpenseDate() {
+    $("#expense_date").empty();
+    var date = new Date();
+    var date_options = "<option value=''>--Select date--</option><option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>";
+    var one_day = (60 * 60 * 24 * 1000);
+    for (var i = 1; i <= 15; i++) {
+        date_options = date_options + "<option value='" + $.format.date(date - one_day, "dd-MM-yyyy") + "'>" + $.format.date(date - one_day, "dd-MM-yyyy") + "</option>";
+        date = date - one_day;
+    }
+    $("#expense_date").append(date_options);
 }
