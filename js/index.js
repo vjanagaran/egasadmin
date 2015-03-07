@@ -665,6 +665,7 @@ function loadPurchasedItem(id) {
         if (id == row.id) {
             out = out + '<tr><td>Employee Name</td><td>' + row.supplier_name + '</td></tr>';
             out = out + '<tr><td>Net Weight</td><td>' + row.item_name + '</td></tr>';
+            out = out + "<tr><td>Date</td><td><select data-role='none' name='purchase_update_date' id='purchase_update_date'></select></td></tr>";
             out = out + '<tr><td>Rate &#8377;</td><td><input type="text" value="' + parseInt(row.price) + '" id="update_price_' + id + '"/> </td></tr>';
             out = out + '<tr><td>Quantity</td><td><input type="text" value="' + row.qty + '" id="update_qty_' + id + '"/> </td></tr>';
             out = out + '<tr><td>Total &#8377;</td><td><span id="update_total_' + id + '">' + parseInt(row.total) + '</span></td></tr>';
@@ -675,6 +676,16 @@ function loadPurchasedItem(id) {
     });
     out = out + '</tbody></table>';
     $(out).appendTo("#purchased_item_detail").enhanceWithin();
+
+    var date = new Date();
+    var date_options = "<option value=''>--Select date--</option><option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>";
+    var one_day = (60 * 60 * 24 * 1000);
+    $("#purchase_update_date").empty();
+    for (var i = 1; i <= 15; i++) {
+        date_options = date_options + "<option value='" + $.format.date(date - one_day, "dd-MM-yyyy") + "'>" + $.format.date(date - one_day, "dd-MM-yyyy") + "</option>";
+        date = date - one_day;
+    }
+    $("#purchase_update_date").append(date_options);
 }
 
 function calcUpdateTotal(id) {
@@ -704,7 +715,8 @@ function updatePurchase(id) {
         rate: $("#update_price_" + id).val(),
         quantity: $("#update_qty_" + id).val(),
         total_amount: $("#update_total_" + id).html(),
-        chq_no: $("#update_cheque_" + id).val()
+        chq_no: $("#update_cheque_" + id).val(),
+        date: $("#purchase_update_date").val()
     };
     $.ajax({
         type: "POST",
