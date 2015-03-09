@@ -348,15 +348,10 @@ function loadCustomerPriceDetails() {
     $("#empty_cyl").val("");
     $("#cost").html(0);
     var options = "<option value=''>--Select customer name--</option>"
-    var date = new Date();
-    var date_options = "<option value=''>--Select date--</option><option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>";
+    var date = "";
+    var date_options = "";
     var one_day = (60 * 60 * 24 * 1000);
     $("#supply_date").empty();
-    for (var i = 1; i <= 15; i++) {
-        date_options = date_options + "<option value='" + $.format.date(date - one_day, "dd-MM-yyyy") + "'>" + $.format.date(date - one_day, "dd-MM-yyyy") + "</option>";
-        date = date - one_day;
-    }
-    $("#supply_date").append(date_options);
     $.ajax({
         type: "GET",
         url: config.api_url + "module=admin&action=supply_customer_list",
@@ -365,6 +360,13 @@ function loadCustomerPriceDetails() {
         success: function (rs) {
             $("#supplier .ui-content table").removeClass("remove-item");
             if (rs.error == false) {
+                var from = rs.date.split("-");
+                date = new Date(from[2], from[1] - 1, from[0]);
+                date_options = "<option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>"
+                for (var i = 1; i <= 15; i++) {
+                    date_options = date_options + "<option value='" + $.format.date(date - one_day, "dd-MM-yyyy") + "'>" + $.format.date(date - one_day, "dd-MM-yyyy") + "</option>";
+                    date = date - one_day;
+                }
                 $.each(rs.data, function (cusindex, cusrow) {
                     options = options + "<option value='" + cusrow.customer_id + "'>" + cusrow.customer_name + "</option>";
                     customer_price_details.push({name: cusrow.customer_name, id: cusrow.customer_id, empties: cusrow.pending_cylinder, items: []});
@@ -378,6 +380,7 @@ function loadCustomerPriceDetails() {
                     });
                 });
                 $("#customer_list_supplier").append(options);
+                $("#supply_date").append(date_options);
                 $("#supplier_spinner").empty();
             } else {
                 $("#customer_list_supplier").append("<option value=''>-- No customers --</option>");
@@ -786,14 +789,9 @@ function showSupplierList() {
     $("#purchase_spinner").append(loading);
     var options = "<option value=''>--Select Supplier--</option>";
     $("#purchase_date").empty();
-    var date = new Date();
-    var date_options = "<option value=''>--Select date--</option><option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>";
+    var date = "";
+    var date_options = "";
     var one_day = (60 * 60 * 24 * 1000);
-    for (var i = 1; i <= 15; i++) {
-        date_options = date_options + "<option value='" + $.format.date(date - one_day, "dd-MM-yyyy") + "'>" + $.format.date(date - one_day, "dd-MM-yyyy") + "</option>";
-        date = date - one_day;
-    }
-    $("#purchase_date").append(date_options);
     $.ajax({
         type: "GET",
         url: config.api_url + "module=admin&action=supplier_list",
@@ -803,11 +801,19 @@ function showSupplierList() {
             $("#purchase .ui-content table").removeClass("remove-item");
             $("#purchase_spinner").empty();
             if (data.error == false) {
+                var from = data.date.split("-");
+                date = new Date(from[2], from[1] - 1, from[0]);
+                date_options = "<option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>";
+                for (var i = 1; i <= 15; i++) {
+                    date_options = date_options + "<option value='" + $.format.date(date - one_day, "dd-MM-yyyy") + "'>" + $.format.date(date - one_day, "dd-MM-yyyy") + "</option>";
+                    date = date - one_day;
+                }
                 $.each(data.data, function (index, row) {
                     supplier_details.push({id: row.id, name: row.name, code: row.supplier_no, price: row.price});
                     options = options + "<option value='" + row.id + "'>" + row.name + "</option>";
                 });
                 $("#employee_list").append(options);
+                $("#purchase_date").append(date_options);
             }
         },
         error: function (request, status, error) {
@@ -931,14 +937,9 @@ function loadCustomerPaymentDetails() {
     $("#total_bal").html(0);
     var options = "<option value=''>--Select customer name--</option>";
     $("#collection_date").empty();
-    var date = new Date();
-    var date_options = "<option value=''>--Select date--</option><option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>";
+    var date = "";
+    var date_options = "";
     var one_day = (60 * 60 * 24 * 1000);
-    for (var i = 1; i <= 15; i++) {
-        date_options = date_options + "<option value='" + $.format.date(date - one_day, "dd-MM-yyyy") + "'>" + $.format.date(date - one_day, "dd-MM-yyyy") + "</option>";
-        date = date - one_day;
-    }
-    $("#collection_date").append(date_options);
     $.ajax({
         type: "GET",
         url: config.api_url + "module=admin&action=collection_customer_list",
@@ -947,11 +948,19 @@ function loadCustomerPaymentDetails() {
         success: function (rs) {
             $("#collection .ui-content table").removeClass("remove-item");
             if (rs.error == false) {
+                var from = rs.date.split("-");
+                date = new Date(from[2], from[1] - 1, from[0]);
+                date_options = "<option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>"
+                for (var i = 1; i <= 15; i++) {
+                    date_options = date_options + "<option value='" + $.format.date(date - one_day, "dd-MM-yyyy") + "'>" + $.format.date(date - one_day, "dd-MM-yyyy") + "</option>";
+                    date = date - one_day;
+                }
                 $.each(rs.data, function (cusindex, cusrow) {
                     options = options + "<option value='" + cusrow.id + "'>" + cusrow.name + "</option>";
                     customer_payment_details.push({id: cusrow.id, name: cusrow.name, balance: [{pending_cyls: cusrow.balance.pending_cylinder, pending_amt: cusrow.balance.pending_amount}]});
                 });
                 $("#customer_list_collection").append(options);
+                $("#collection_date").append(date_options);
                 $("#collection_spinner").empty();
             } else {
                 $("#customer_list_collection").append("<option value=''>--No customers--</option>");
@@ -1179,7 +1188,7 @@ function cancelExpense() {
 function showExpenseDate() {
     $("#expense_date").empty();
     var date = new Date();
-    var date_options = "<option value=''>--Select date--</option><option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>";
+    var date_options = "<option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>";
     var one_day = (60 * 60 * 24 * 1000);
     for (var i = 1; i <= 15; i++) {
         date_options = date_options + "<option value='" + $.format.date(date - one_day, "dd-MM-yyyy") + "'>" + $.format.date(date - one_day, "dd-MM-yyyy") + "</option>";
