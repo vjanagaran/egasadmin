@@ -886,7 +886,8 @@ function submitPurchase() {
             quantity: $("#qty").val(),
             total_amount: $("#purchase_total").html(),
             chq_no: $("#cheque_no").val(),
-            date: date
+            date: date,
+            user_id: getVal(config.user_id)
         };
         $.ajax({
             type: "POST",
