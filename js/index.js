@@ -902,7 +902,9 @@ function submitPurchase() {
                     $("#purchase_popup .ui-content a").attr("data-rel", "back");
                     $("#purchase_popup_text").html(data.message);
                     $("#purchase_popup").popup("open");
+                    $("#emp_code").html(" ");
                     showSupplierList();
+                    resetPurchase();
                 } else {
                     $("#purchase_spinner").empty();
                     $("#purchase_popup .ui-content a").removeAttr("href");
