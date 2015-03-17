@@ -123,6 +123,7 @@ var customer_payment_details = [];
 var supplier_details = [];
 var purchased_items = [];
 var expenses_list = [];
+var panel_open = false;
 jQuery.fn.center = function () {
     this.css("position", "fixed");
     this.css("top", ($(window).height() / 2) - (this.outerHeight() / 2));
@@ -132,6 +133,18 @@ jQuery.fn.center = function () {
 function validateEmail(email) {
     var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
+}
+
+function openPanel() {
+    if (panel_open != true) {
+        $("#mypanel").panel();
+        $("#mypanel").panel("open");
+        panel_open = true;
+    } else {
+        $("#mypanel").panel();
+        $("#mypanel").panel("close");
+        panel_open = false;
+    }
 }
 
 
