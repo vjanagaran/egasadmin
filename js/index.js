@@ -616,7 +616,9 @@ function sendSupplyDetails() {
 function loadStockDetails() {
     $("#stock_details").empty();
     $("#stock_details").append(loading);
-    var out = '<table><tbody>';
+    var out = "";
+    var full_cyl_table = '<table><thead><tr><th class="align-left">Full cylinder</th><th class="align-left">Month</th><th class="align-left">Daily</th></tr></thead><tbody>';
+    var mt_cyl_table = '<table><thead><tr><th class="align-left">Empty cylinder</th><th class="align-left">Month</th><th class="align-left">Daily</th></tr></thead><tbody>';
     $.ajax({
         type: "GET",
         url: config.api_url + "module=admin&action=stock_list",
@@ -625,11 +627,17 @@ function loadStockDetails() {
         success: function (data) {
             if (data.error == false) {
                 $("#stock_details").empty();
-                out = out + '<tr><td>Product</td><td>' + data.data.name + '</td></tr>';
-                out = out + '<tr><td>Stock</td><td>' + data.data.purchase_stock + '</td></tr>';
-                out = out + '<tr><td>Sale Stock</td><td>' + data.data.supply_stock + '</td></tr>';
-                out = out + '<tr><td>Balance Stock</td><td>' + data.data.pending_stock + '</td></tr>';
-                out = out + '<tr><td>Empty Received</td><td>' + data.data.recived_cylinders + '</td></tr>';
+                out = out + '<p>' + data.data.name + '</p>';
+                out = out + full_cyl_table + '<tr><td class="align-left">Opening</td><td class="align-center">' + data.data.monthly.full_cylinder_monthly_open_stock + '</td><td class="align-center">' + data.data.daily.full_cylinder_daily_open_stock + '</td></tr>';
+                out = out + '<tr><td class="align-left">Purchase</td><td class="align-center">' + data.data.monthly.full_cylinder_current_month_purchase + '</td><td class="align-center">' + data.data.daily.full_cylinder_daily_purchase + '</td></tr>';
+                out = out + '<tr><td class="align-left">Sales</td><td class="align-center">' + data.data.monthly.full_cylinder_current_month_sales + '</td><td class="align-center">' + data.data.daily.full_cylinder_daily_sales + '</td></tr>';
+                out = out + '<tr><td class="align-left">Balance</td><td class="align-center">' + data.data.monthly.full_cylinder_today_balance + '</td><td class="align-center">' + data.data.daily.full_cylinder_today_balance + '</td></tr>';
+                out = out + '</tbody></table>';
+                out = out + mt_cyl_table + '<tr><td class="align-left">Opening</td><td class="align-center">' + data.data.monthly.empty_cylinder_monthly_open_stock + '</td><td class="align-center">' + data.data.daily.empty_cylinder_daily_open_stock + '</td></tr>';
+                out = out + '<tr><td class="align-left">Received</td><td class="align-center">' + data.data.monthly.empty_cylinder_curr_month_received + '</td><td class="align-center">' + data.data.daily.empty_cylinder_daily_received + '</td></tr>';
+                out = out + '<tr><td class="align-left">Sent</td><td class="align-center">' + data.data.monthly.empty_cylinder_curr_month_sent + '</td><td class="align-center">' + data.data.daily.empty_cylinder_daily_sent + '</td></tr>';
+                out = out + '<tr><td class="align-left">Balance</td><td class="align-center">' + data.data.monthly.empty_cylinder_today_balance + '</td><td class="align-center">' + data.data.daily.empty_cylinder_today_balance + '</td></tr>';
+                out = out + '</tbody></table>';
                 $(out).appendTo("#stock_details").enhanceWithin();
             } else {
                 $("#stock_details").empty();
