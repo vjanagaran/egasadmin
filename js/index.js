@@ -376,7 +376,7 @@ function loadCustomerPriceDetails() {
                 var from = rs.date.split("-");
                 date = new Date(from[2], from[1] - 1, from[0]);
                 date_options = "<option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>"
-                for (var i = 1; i <= 15; i++) {
+                for (var i = 1; i <= 30; i++) {
                     date_options = date_options + "<option value='" + $.format.date(date - one_day, "dd-MM-yyyy") + "'>" + $.format.date(date - one_day, "dd-MM-yyyy") + "</option>";
                     date = date - one_day;
                 }
@@ -711,7 +711,7 @@ function loadPurchasedItem(id) {
     var date_options = "<option value=''>--Select date--</option><option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>";
     var one_day = (60 * 60 * 24 * 1000);
     $("#purchase_update_date").empty();
-    for (var i = 1; i <= 15; i++) {
+    for (var i = 1; i <= 30; i++) {
         date_options = date_options + "<option value='" + $.format.date(date - one_day, "dd-MM-yyyy") + "'>" + $.format.date(date - one_day, "dd-MM-yyyy") + "</option>";
         date = date - one_day;
     }
@@ -826,7 +826,7 @@ function showSupplierList() {
                 var from = data.date.split("-");
                 date = new Date(from[2], from[1] - 1, from[0]);
                 date_options = "<option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>";
-                for (var i = 1; i <= 15; i++) {
+                for (var i = 1; i <= 30; i++) {
                     date_options = date_options + "<option value='" + $.format.date(date - one_day, "dd-MM-yyyy") + "'>" + $.format.date(date - one_day, "dd-MM-yyyy") + "</option>";
                     date = date - one_day;
                 }
@@ -976,7 +976,7 @@ function loadCustomerPaymentDetails() {
                 var from = rs.date.split("-");
                 date = new Date(from[2], from[1] - 1, from[0]);
                 date_options = "<option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>"
-                for (var i = 1; i <= 15; i++) {
+                for (var i = 1; i <= 30; i++) {
                     date_options = date_options + "<option value='" + $.format.date(date - one_day, "dd-MM-yyyy") + "'>" + $.format.date(date - one_day, "dd-MM-yyyy") + "</option>";
                     date = date - one_day;
                 }
@@ -1215,7 +1215,7 @@ function showExpenseDate() {
     var date = new Date();
     var date_options = "<option value='" + $.format.date(date, "dd-MM-yyyy") + "'>" + $.format.date(date, "dd-MM-yyyy") + "</option>";
     var one_day = (60 * 60 * 24 * 1000);
-    for (var i = 1; i <= 15; i++) {
+    for (var i = 1; i <= 30; i++) {
         date_options = date_options + "<option value='" + $.format.date(date - one_day, "dd-MM-yyyy") + "'>" + $.format.date(date - one_day, "dd-MM-yyyy") + "</option>";
         date = date - one_day;
     }
